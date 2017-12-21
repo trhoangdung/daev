@@ -39,7 +39,7 @@ def luq(matrix_a, tol):
 
 if __name__ == '__main__':
 
-    matrix_a = random(6, 6, density=0.1, format='csc')
+    matrix_a = random(10, 10, density=0.1, format='csc')
     # dim = 1000, few seconds
     # dim = 2000, 20 seconds
     # dim = 4000, 182 seconds

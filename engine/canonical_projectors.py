@@ -74,8 +74,8 @@ if __name__ == '__main__':
 
     print "\nnorm of usvt - matrix_a = {}".format(np.linalg.norm(usvt - matrix_a))
 
-    Q = vt[r:n, :]
-    null_a = np.transpose(Q)
+    v = np.transpose(vt)
+    null_a = v[:, r:n]
 
     print "\nnull space of matrix _a = spane of {}".format(null_a)
     if null_a != []:

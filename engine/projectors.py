@@ -1,5 +1,5 @@
 '''
-This module implements canonical projectors and its related functions used to decompose the DAE equation
+This module implements projectors used to decompose the DAE equation
 Dung Tran: Dec/2017
 '''
 
@@ -46,6 +46,12 @@ def orth_projector_on_ker_a(matrix_a):
     print "\ncomputing orthogonal projector is finished in {} seconds".format(runtime)
 
     return projector, runtime
+
+
+def canonical_projector_on_ker_a(matrix_a):
+    'implement canonical projector onto ker of matrix a'
+
+    pass
 
 if __name__ == '__main__':
 

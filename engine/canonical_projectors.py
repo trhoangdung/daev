@@ -9,77 +9,44 @@ import time
 import numpy as np
 
 
-def luq(matrix_a, tol):
-    'This decompose a sparse matrix e using LUQ decomposition'
+def null_space(matrix_a):
+    'compute null space of a matrix_a using svd decomposition'
 
-    # matrix_a = L [Ubar 0; 0 0] Q
+    start = time.time()
+    print "\ncomputing null space ..."
+    if issparse(matrix_a):
+        a_mat = matrix_a.todense()
+    else:
+        assert isinstance(matrix_a, np.ndarray)
+        a_mat = matrix_a
 
-    # The main reference is:
-    # 1) Passivity Assessment and Model Order Reduction for Linear-Time-Invariant Descriptor Systems
-    # in VLSI Circuit Simulation, Master Thesis by Zheng Zhang, 2010, section 3.9.3, page 93
+    m, n = a_mat.shape
+    u_mat, s_vec, vt_mat = svd(a_mat)
 
-    # matlab code is available at :
-    # http://www.mathworks.com/matlabcentral/fileexchange/11120-null-space-of-a-sparse-matrix?focused=5073820&tab=function
+    rank_a = np.linalg.matrix_rank(a_mat)
+    v_mat = np.transpose(vt_mat)
+    null_a = v_mat[:, rank_a:n]
+    end = time.time()
+    runtime = end - start
+    print "\ncomputing null space is finished in {} seconds".format(runtime)
 
-    # USAGE: L, U, Q = luq(matrix_a, tol)
-    # INPUT:
-    #        matrix_a        a sparse matrix
-    #        tol             uses to tolerance tol in separating zero and nonzero values
-    # OUTPUT:
-    #        L, U, Q         matrices
+    return null_a, runtime
 
-    # COMMENTS:
-    #        based on lu decomposition
-
-    if not issparse(matrix_a):
-        raise ValueError('Matrix a is not a sparse matrix')
-
-    pass
 
 
 if __name__ == '__main__':
 
-    matrix_a = random(5, 4, density=0.2, format='csc')
+    matrix_a = random(10, 10, density=0.1, format='csc')
     # dim = 1000, few seconds
     # dim = 2000, 20 seconds
     # dim = 4000, 182 seconds
 
     # accuracy is arround e-12
 
-    print "\nmatrix_a = \n{}".format(matrix_a.todense())
+    null_a, runtime = null_space(matrix_a)
 
-    r = np.linalg.matrix_rank(matrix_a.todense())
+    print "\nnull space of matrix _a is : \n{}".format(null_a)
 
-    print "\nrank of matrix_a = {}".format(r)
-    m, n = matrix_a.shape
+    print "\nnull space computation time is : {}".format(runtime)
 
-    print "\nm = {}, n = {}".format(m, n)
-
-    # test svd decomposition
-    start = time.time()
-    u, s, vt = svd(matrix_a.todense())
-    end = time.time()
-    print "\nsvd computation time = {}".format(end - start)
-    print "\nu = \n{}, \ns = \n{}, \nvt = \n{}".format(u, s, vt)
-
-    matrix_s = np.zeros((m, n), dtype=float)
-    ss = np.diag(s)
-    print "\nss = {}".format(ss)
-
-
-
-    #matrix_s = np.diag(s)
-    #us = np.dot(u, matrix_s)
-    #usvt = np.dot(us, vt)
-    #print "\nusvt = \n{}".format(usvt)
-    #print "\nnorm of usvt - matrix_a = {}".format(np.linalg.norm(usvt - matrix_a))
-
-    v = np.transpose(vt)
-    null_a = v[:, r:n]
-
-    if r < min(matrix_a.shape):
-        print "\nnull space of matrix _a = spane of {}".format(null_a)
-        print "\nnorm of  matrix_a * null_1 = {}".format(np.linalg.norm(np.multiply(matrix_a.todense(), null_a[:, 0])))
-
-    else:
-        print "\nmatrix_a is full rank"
+    print "\nnorm of matrix_a * null_a = {}".format(np.linalg.norm(np.dot(matrix_a.todense(), null_a)))

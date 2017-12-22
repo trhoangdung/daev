@@ -33,20 +33,37 @@ def null_space(matrix_a):
     return null_a, runtime
 
 
+def orth_projector_on_ker_a(matrix_a):
+    'implement orthogonal projector onto Ker of matrix a'
+
+    # A*Q = 0, Q * Q = Q
+    print "\ncomputing orthogonal projector on ker of matrix a ..."
+    start = time.time()
+    null_a, _ = null_space(matrix_a)
+    projector = np.dot(null_a, np.transpose(null_a))
+    end = time.time()
+    runtime = end - start
+    print "\ncomputing orthogonal projector is finished in {} seconds".format(runtime)
+
+    return projector, runtime
 
 if __name__ == '__main__':
 
-    matrix_a = random(10, 10, density=0.1, format='csc')
+    matrix_a = random(5, 5, density=0.1, format='csc')
     # dim = 1000, few seconds
     # dim = 2000, 20 seconds
     # dim = 4000, 182 seconds
 
     # accuracy is arround e-12
 
-    null_a, runtime = null_space(matrix_a)
+    null_a, _ = null_space(matrix_a)
 
     print "\nnull space of matrix _a is : \n{}".format(null_a)
 
-    print "\nnull space computation time is : {}".format(runtime)
-
     print "\nnorm of matrix_a * null_a = {}".format(np.linalg.norm(np.dot(matrix_a.todense(), null_a)))
+
+    projector, _ = orth_projector_on_ker_a(matrix_a)
+
+    print "\northogonal projector onto Ker(matrix_a) is : \n{}".format(projector)
+
+    print "\nnorm of matrix_a * projector is : {}".format(np.linalg.norm(np.dot(matrix_a.todense(), projector)))

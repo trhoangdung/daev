@@ -39,7 +39,7 @@ def luq(matrix_a, tol):
 
 if __name__ == '__main__':
 
-    matrix_a = random(10, 10, density=0.1, format='csc')
+    matrix_a = random(5, 4, density=0.2, format='csc')
     # dim = 1000, few seconds
     # dim = 2000, 20 seconds
     # dim = 4000, 182 seconds
@@ -55,33 +55,31 @@ if __name__ == '__main__':
 
     print "\nm = {}, n = {}".format(m, n)
 
-    if m != n:
-        raise ValueError('not a square matrix')
-
     # test svd decomposition
     start = time.time()
     u, s, vt = svd(matrix_a.todense())
     end = time.time()
     print "\nsvd computation time = {}".format(end - start)
-
-    matrix_s = np.diag(s)
-    us = np.dot(u, matrix_s)
-    usvt = np.dot(us, vt)
-
     print "\nu = \n{}, \ns = \n{}, \nvt = \n{}".format(u, s, vt)
 
-    print "\nusvt = \n{}".format(usvt)
+    matrix_s = np.zeros((m, n), dtype=float)
+    ss = np.diag(s)
+    print "\nss = {}".format(ss)
 
-    print "\nnorm of usvt - matrix_a = {}".format(np.linalg.norm(usvt - matrix_a))
+
+
+    #matrix_s = np.diag(s)
+    #us = np.dot(u, matrix_s)
+    #usvt = np.dot(us, vt)
+    #print "\nusvt = \n{}".format(usvt)
+    #print "\nnorm of usvt - matrix_a = {}".format(np.linalg.norm(usvt - matrix_a))
 
     v = np.transpose(vt)
     null_a = v[:, r:n]
 
-    print "\nnull space of matrix _a = spane of {}".format(null_a)
-    if null_a != []:
-
+    if r < min(matrix_a.shape):
+        print "\nnull space of matrix _a = spane of {}".format(null_a)
         print "\nnorm of  matrix_a * null_1 = {}".format(np.linalg.norm(np.multiply(matrix_a.todense(), null_a[:, 0])))
-        print "\nnorm of matrix_a * null_2 = {}".format(np.linalg.norm(np.multiply(matrix_a.todense(), null_a[:, 1])))
 
     else:
         print "\nmatrix_a is full rank"

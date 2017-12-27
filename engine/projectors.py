@@ -80,9 +80,9 @@ def admissible_projectors(matrix_e, matrix_a):
     assert A0.shape[0] == E0.shape[0], 'inconsistent matrices'
 
     admissible_projectors = []
+    return_e_inv = None    # used to construct decoupled systems
 
     m = A0.shape[0]
-
     Im = np.eye(m, dtype=float)
 
     rank_E0 = np.linalg.matrix_rank(E0)
@@ -90,16 +90,17 @@ def admissible_projectors(matrix_e, matrix_a):
         print "\nsystem is index-0, dae can be convert to ode by inverse(E) * A"
     else:
         Q0, _ = orth_projector_on_ker_a(E0)
-        E1 = E0 + np.dot(A0, Q0)
+        E1 = E0 - np.dot(A0, Q0)
         rank_E1 = np.linalg.matrix_rank(E1)
         if rank_E1 == m:
             print "\nsystem is index-1"
             admissible_projectors.append(Q0)
+            return_e_inv = np.linalg.inv(E1)
         else:
             Q1, _ = orth_projector_on_ker_a(E1)
             P0 = Im - Q0
             A1 = np.dot(A0, P0)
-            E2 = E1 + np.dot(A1, Q1)
+            E2 = E1 - np.dot(A1, Q1)
             rank_E2 = np.linalg.matrix_rank(E2)
             if rank_E2 == m:
                 # print "\nsystem is index-2"
@@ -109,12 +110,13 @@ def admissible_projectors(matrix_e, matrix_a):
                 admissible_Q1 = np.dot(Q1, E2_inv_A1)
                 admissible_projectors.append(Q0)
                 admissible_projectors.append(admissible_Q1)
+                return_e_inv = np.linalg.inv(E2)
 
             else:
                 Q2, _ = orth_projector_on_ker_a(E2)
                 P1 = Im - Q1
                 A2 = np.dot(A1, P1)
-                E3 = E2 + np.dot(A2, Q2)
+                E3 = E2 - np.dot(A2, Q2)
                 rank_E3 = np.linalg.matrix_rank(E3)
                 if rank_E3 == m:
                     # print "\nsystem is index-3"
@@ -133,11 +135,11 @@ def admissible_projectors(matrix_e, matrix_a):
                     admissible_projectors.append(admissible_Q0)
                     admissible_projectors.append(admissible_Q1)
                     admissible_projectors.append(admissible_Q2)
-
+                    return_e_inv = np.linalg.inv(E3)
                 else:
                     print "system has index > 3"
                     admissible_projectors = 'error'
 
     end = time.time()
     runtime = end - start
-    return admissible_projectors, runtime
+    return admissible_projectors, return_e_inv, runtime

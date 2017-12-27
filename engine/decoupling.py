@@ -4,6 +4,8 @@ Dung Tran: Dec/2017
 '''
 
 import numpy as np
+from engine.dae_automaton import DaeAutomation
+from engine.projectors import admissible_projectors
 
 
 class DecoupledIndexOne(object):
@@ -121,6 +123,7 @@ class DecoupledIndexThree(object):
         self.alg3_matrix_b = None    # alg3 part
         self.alg3_matrix_c = None    # alg3 part
         self.alg3_matrix_d = None    # alg3 part
+        self.out_matrix_c = None    # output matrix
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat,
                      alg2_b_mat, alg2_c_mat, alg3_a_mat, alg3_b_mat, alg3_c_mat, alg3_d_mat, c_mat):
@@ -164,3 +167,54 @@ class DecoupledIndexThree(object):
         self.alg3_matrix_c = alg3_c_mat
         self.alg3_matrix_d = alg3_d_mat
         self.out_matrix_c = c_mat
+
+
+class Decoupling(object):
+    'implement decoupling techniques using admissible projectors'
+
+    def __init__(self):
+        self.decoupled_sys = None    # return decoupled system
+        self.status = None    # return status of decoupling process
+
+    def get_decoupled_system(self, dae_automaton):
+        'get decoupled system from an dae automaton'
+
+        assert isinstance(dae_automaton, DaeAutomation)
+
+        matrix_e = dae_automaton.matrix_e
+        matrix_a = dae_automaton.matrix_a
+        matrix_b = dae_automaton.matrix_b
+        matrix_c = dae_automaton.matrix_c
+
+        n, _ = matrix_a.shape[0]
+        In = np.eye(n, dtype=float)
+
+        adm_projs, e_mu_inv, _ = admissible_projectors(matrix_e, matrix_a)
+
+        if adm_projs == 'error':
+            print "\nerror: dae system has index larger than 3"
+            self.status = 'error'
+        else:
+            assert isinstance(adm_projs, list), 'error: not a list of admissible projectors'
+            ind = len(adm_projs)
+
+            if ind == 1:
+                decoupled_sys = DecoupledIndexOne()
+                Q0 = adm_projs[0]
+                P0 = In - Q0
+                A0 = matrix_a
+                e_mu_inv_A0 = np.dot(e_mu_inv, A0)
+                ode_a_mat = np.dot(P0, e_mu_inv_A0)
+                e_mu_inv_B = np.dot(e_mu_inv, matrix_b)
+                ode_b_mat = np.dot(P0, e_mu_inv_B)
+
+                alg_a_mat = np.dot(Q0, e_mu_inv_A0)
+                alg_b_mat = np.dot(Q0, e_mu_inv_B)
+                decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg_a_mat, alg_b_mat, matrix_c)
+                self.decoupled_sys = decoupled_sys
+                self.status = 'success'
+
+            elif ind == 2:
+                pass
+            elif ind == 3:
+                pass

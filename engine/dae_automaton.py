@@ -43,5 +43,3 @@ class DaeAutomation(object):
             self.matrix_a = matrix_a
             self.matrix_b = matrix_b
             self.matrix_c = matrix_c
-
-        return self

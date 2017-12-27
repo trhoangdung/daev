@@ -6,7 +6,6 @@ from scipy.sparse import issparse
 from scipy.linalg import svd
 import time
 import numpy as np
-from daes import index_2_daes, index_3_daes
 
 
 def null_space(matrix_a):
@@ -142,16 +141,3 @@ def admissible_projectors(matrix_e, matrix_a):
     end = time.time()
     runtime = end - start
     return admissible_projectors, runtime
-
-
-if __name__ == '__main__':
-
-    E1, A1, _, _ = index_2_daes().RL_network(1.0, 1.0)
-    adm_proj_1, rt1 = admissible_projectors(E1, A1)
-    print "\nlist of projectors : = {}".format(adm_proj_1)
-    print "\nruntime = {}".format(rt1)
-
-    E2, A2, _, _ = index_3_daes().car_pendulum(1.0, 1.0, 1.0)
-    adm_proj_2, rt2 = admissible_projectors(E2, A2)
-    print "\nlist of projectors : = {}".format(adm_proj_2)
-    print "\nruntime = {}".format(rt2)

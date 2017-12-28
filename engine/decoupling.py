@@ -215,6 +215,29 @@ class Decoupling(object):
                 self.status = 'success'
 
             elif ind == 2:
-                pass
+                decoupled_sys = DecoupledIndexTwo()
+                Q0 = adm_projs[0]
+                P0 = In - Q0
+                Q1 = adm_projs[1]
+                P1 = In - Q1
+                P0_P1 = np.dot(P0, P1)
+                A2 = np.dot(matrix_a, P0_P1)
+                E2_inv_A2 = np.dot(e_mu_inv, A2)
+                E2_inv_B = np.dot(e_mu_inv, matrix_b)
+                ode_a_mat = np.dot(P0_P1, E2_inv_A2)
+                ode_b_mat = np.dot(P0_P1, E2_inv_B)
+                alg1_a_mat = np.dot(Q1, E2_inv_A2)
+                alg1_b_mat = np.dot(Q1, E2_inv_B)
+                Q0_P1 = np.dot(Q0, P1)
+                alg2_a_mat = np.dot(Q0_P1, E2_inv_A2)
+                alg2_b_mat = np.dot(Q0_P1, E2_inv_B)
+                alg2_c_mat = Q0
+
+                decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat, \
+                                               alg2_b_mat, alg2_c_mat, matrix_c)
+
+                self.decoupled_sys = decoupled_sys
+                self.status = 'success'
+
             elif ind == 3:
                 pass

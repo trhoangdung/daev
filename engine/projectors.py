@@ -107,7 +107,7 @@ def admissible_projectors(matrix_e, matrix_a):
                 # compute admissible Q1*
                 E2_inv = np.linalg.inv(E2)
                 E2_inv_A1 = np.dot(E2_inv, A1)
-                admissible_Q1 = np.dot(Q1, E2_inv_A1)
+                admissible_Q1 = np.dot(-Q1, E2_inv_A1)
                 admissible_projectors.append(Q0)
                 admissible_projectors.append(admissible_Q1)
                 return_e_inv = np.linalg.inv(E2)
@@ -123,7 +123,7 @@ def admissible_projectors(matrix_e, matrix_a):
                     # compute admissible projectors Q2*, Q1*
                     E3_inv = np.linalg.inv(E3)
                     E3_inv_A2 = np.dot(E3_inv, A2)
-                    admissible_Q2 = np.dot(Q2, E3_inv_A2)
+                    admissible_Q2 = np.dot(-Q2, E3_inv_A2)
                     admissible_P2 = Im - admissible_Q2
                     E3_inv_A1 = np.dot(E3_inv, A1)
                     ad_P2_E3_inv_A1 = np.dot(admissible_P2, E3_inv_A1)

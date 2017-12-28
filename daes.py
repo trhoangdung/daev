@@ -14,10 +14,10 @@ class index_1_daes(object):
     'some index-1 DAE benchmarks'
 
     def __init__(self):
-        self.E = None
-        self.A = None
-        self.B = None
-        self.C = None
+        self.matrix_e = None
+        self.matrix_a = None
+        self.matrix_b = None
+        self.matrix_c = None
 
     def RLC_circuit(self, L, C, R):
         'RLC circuit'
@@ -27,12 +27,12 @@ class index_1_daes(object):
         assert isinstance(C, float) and C > 0
         assert isinstance(R, float) and R > 0
 
-        self.E = np.array([[L, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        self.A = np.array([[0, 1, 0, 0], [1 / C, 0, 0, 0], [-R, 0, 0, 1], [0, 1, 1, 1]])
-        self.B = np.array([[0], [0], [0], [-1]])
-        self.C = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
+        self.matrix_e = np.array([[L, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        self.matrix_a = np.array([[0, 1, 0, 0], [1 / C, 0, 0, 0], [-R, 0, 0, 1], [0, 1, 1, 1]])
+        self.matrix_b = np.array([[0], [0], [0], [-1]])
+        self.matrix_c = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
 
-        return self.E, self.A. self.B, self.C
+        return self.matrix_e, self.matrix_a, self.matrix_b, self.matrix_c
 
 
 class index_2_daes(object):

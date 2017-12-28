@@ -6,6 +6,7 @@ from scipy.sparse import issparse
 from scipy.linalg import svd
 import time
 import numpy as np
+from daes import index_1_daes, index_2_daes, index_3_daes
 
 
 def null_space(matrix_a):
@@ -48,7 +49,7 @@ def orth_projector_on_ker_a(matrix_a):
 
 
 def admissible_projectors(matrix_e, matrix_a):
-    'compute admissible projectors of regular matrix pencil (E, A)'
+    'compute admissible projectors of regular matrix pencil (E, A) upto index 3'
 
     # references:
     #    1) An efficient projector-based passivity test for descriptor systems
@@ -143,3 +144,103 @@ def admissible_projectors(matrix_e, matrix_a):
     end = time.time()
     runtime = end - start
     return admissible_projectors, return_e_inv, runtime
+
+
+def admissible_projectors_full(matrix_e, matrix_a):
+    'constructing admissible projectors for regular matrix pencil (E, A) with arbitrary index'
+
+    # return list of admissible projectors, length of the list = index of (E, A)
+
+    if issparse(matrix_e):
+        E0 = matrix_e.todense()
+        assert E0.shape[0] == E0.shape[1], 'invalid matrix E'
+    else:
+        assert isinstance(matrix_e, np.ndarray)
+        E0 = matrix_e
+        assert E0.shape[0] == E0.shape[1], 'invalid matrix E'
+
+    if issparse(matrix_a):
+        A0 = matrix_e.todense()
+        assert A0.shape[0] == A0.shape[1], 'invalid matrix A'
+    else:
+        assert isinstance(matrix_a, np.ndarray)
+        A0 = matrix_a
+        assert A0.shape[0] == A0.shape[1], 'invalid matrix A'
+
+    assert A0.shape[0] == E0.shape[0], 'inconsistent matrices'
+
+    admissible_projectors = []
+    e_mu_inv = None    # used to construct decoupled systems
+
+    m = A0.shape[0]
+    Im = np.eye(m, dtype=float)
+
+    E = E0.copy()
+    A = A0.copy()
+    rank_E = np.linalg.matrix_rank(E)
+    projectors = []    # contain projectors not yet admissible
+    E_list = []
+    A_list = []
+    while (rank_E != m):
+        Q, _ = orth_projector_on_ker_a(E)
+        projectors.append(Q)    # used to construct admissible projectors
+        E_list.append(E)    # used to construct admissible projectors
+        A_list.append(A)
+        E = E - np.dot(A, Q)
+        A = np.dot(A, Im - Q)
+        rank_E = np.linalg.matrix_rank(E)
+
+    E_inv = np.linalg.inv(E)    # used to construct admissible projectors
+
+    # constructing admissible projectors
+    ind = len(projectors)    # index of the system
+    Q_ad_final = np.dot(-Q, np.dot(E_inv, A_list[ind - 1]))    # the last admissible projector
+
+    if ind == 0:
+        print "\nsystem has index-0, can be converted to ODE"
+    elif ind == 1:
+        admissible_projectors.append(projectors[0])
+    elif ind == 2:
+        admissible_projectors.append(projectors[0])
+        admissible_projectors.append(Q_ad_final)
+    elif ind > 2:
+        # construct Vi = [Q_ad[ind-1], Q_ad[ind-2], ..., Q_ad[i + 1], E[i]]^T
+        for i in xrange(0, ind - 1):
+            admissible_projectors.append([])
+        admissible_projectors.append(Q_ad_final)
+
+        for i in xrange(ind - 2, -1, -1):
+            Vi = E_list[i].copy()
+            for j in xrange(i + 1, ind):
+                Q_ad_j = admissible_projectors[j]
+                Vi = np.vstack((Q_ad_j, Vi))
+            print "\n %%%%%%%%%%%%%"
+            print "\nshape of Vi = {}".format(Vi.shape)
+            Q_ad_i, _ = orth_projector_on_ker_a(Vi)
+            admissible_projectors[i] = Q_ad_i
+
+    return admissible_projectors
+
+
+def test():
+    'test methods'
+
+    # E1, A1, _, _ = index_1_daes().RLC_circuit(1.0, 1.0, 1.0)
+    # E2, A2, _, _ = index_2_daes().RL_network(1.0, 1.0)
+    E3, A3, _, _ = index_3_daes().car_pendulum(1.0, 1.0, 1.0)
+
+    # projs1 = admissible_projectors_full(E1, A1)
+    # projs2 = admissible_projectors_full(E2, A2)
+    projs3 = admissible_projectors_full(E3, A3)
+
+    # print "admissible projectors 1 : \n{}".format(projs1)
+    # print "admissible projectors 2 : \n{}".format(projs2)
+    # print "\nnorm of Q1 * Q0 = {}".format(np.linalg.norm(np.dot(projs2[1], projs2[0])))
+    print "admissible projectors 3 : \n{}".format(projs3)
+    print "\nnorm of Q1 * Q0 = {}".format(np.linalg.norm(np.dot(projs3[1], projs3[0])))
+    print "\nnorm of Q2 * Q0 = {}".format(np.linalg.norm(np.dot(projs3[2], projs3[0])))
+    print "\nnorm of Q2 * Q1 = {}".format(np.linalg.norm(np.dot(projs3[2], projs3[1])))
+
+if __name__ == '__main__':
+
+    test()

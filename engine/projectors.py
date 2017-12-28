@@ -151,6 +151,7 @@ def admissible_projectors_full(matrix_e, matrix_a):
 
     # return list of admissible projectors, length of the list = index of (E, A)
 
+    start = time.time()
     if issparse(matrix_e):
         E0 = matrix_e.todense()
         assert E0.shape[0] == E0.shape[1], 'invalid matrix E'
@@ -222,7 +223,10 @@ def admissible_projectors_full(matrix_e, matrix_a):
             Q_ad_i, _ = orth_projector_on_ker_a(Vi)
             admissible_projectors[i] = Q_ad_i
 
-    return admissible_projectors
+    end = time.time()
+    runtime = end - start
+
+    return admissible_projectors, runtime
 
 
 def test():
@@ -232,9 +236,9 @@ def test():
     # E2, A2, _, _ = index_2_daes().RL_network(1.0, 1.0)
     E3, A3, _, _ = index_3_daes().car_pendulum(1.0, 1.0, 1.0)
 
-    # projs1 = admissible_projectors_full(E1, A1)
-    # projs2 = admissible_projectors_full(E2, A2)
-    projs3 = admissible_projectors_full(E3, A3)
+    # projs1, _ = admissible_projectors_full(E1, A1)
+    # projs2, _ = admissible_projectors_full(E2, A2)
+    projs3, _ = admissible_projectors_full(E3, A3)
 
     # print "admissible projectors 1 : \n{}".format(projs1)
     # print "admissible projectors 2 : \n{}".format(projs2)

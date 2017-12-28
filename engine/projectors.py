@@ -192,10 +192,13 @@ def admissible_projectors_full(matrix_e, matrix_a):
 
     E_inv = np.linalg.inv(E)    # used to construct admissible projectors
 
-    # constructing admissible projectors
+    # constructing admissible projectors: "BACKWARD CONSTRUCTION ALGORITHM"
     ind = len(projectors)    # index of the system
-    Q_ad_final = np.dot(-Q, np.dot(E_inv, A_list[ind - 1]))    # the last admissible projector
 
+    # the last admissible projector can be chosen by:
+    # Q_ad_final = np.dot(-Q, np.dot(E_inv, A_list[ind - 1]))
+    # or:
+    Q_ad_final = Q
     if ind == 0:
         print "\nsystem has index-0, can be converted to ODE"
     elif ind == 1:

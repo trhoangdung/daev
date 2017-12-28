@@ -173,6 +173,7 @@ class Decoupling(object):
     'implement decoupling techniques using admissible projectors'
 
     def __init__(self):
+
         self.decoupled_sys = None    # return decoupled system
         self.status = None    # return status of decoupling process
 
@@ -199,39 +200,50 @@ class Decoupling(object):
             ind = len(adm_projs)
 
             if ind == 1:
+
                 decoupled_sys = DecoupledIndexOne()
                 Q0 = adm_projs[0]
                 P0 = In - Q0
                 A0 = matrix_a
                 e_mu_inv_A0 = np.dot(e_mu_inv, A0)
+
+                # ode part
                 ode_a_mat = np.dot(P0, e_mu_inv_A0)
                 e_mu_inv_B = np.dot(e_mu_inv, matrix_b)
                 ode_b_mat = np.dot(P0, e_mu_inv_B)
 
+                # alg part
                 alg_a_mat = np.dot(Q0, e_mu_inv_A0)
                 alg_b_mat = np.dot(Q0, e_mu_inv_B)
                 decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg_a_mat, alg_b_mat, matrix_c)
+
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
             elif ind == 2:
+
                 decoupled_sys = DecoupledIndexTwo()
                 Q0 = adm_projs[0]
-                P0 = In - Q0
                 Q1 = adm_projs[1]
+                P0 = In - Q0
                 P1 = In - Q1
+                # ode part
                 P0_P1 = np.dot(P0, P1)
                 A2 = np.dot(matrix_a, P0_P1)
                 E2_inv_A2 = np.dot(e_mu_inv, A2)
                 E2_inv_B = np.dot(e_mu_inv, matrix_b)
                 ode_a_mat = np.dot(P0_P1, E2_inv_A2)
                 ode_b_mat = np.dot(P0_P1, E2_inv_B)
+
+                # alg1 part
                 alg1_a_mat = np.dot(Q1, E2_inv_A2)
                 alg1_b_mat = np.dot(Q1, E2_inv_B)
+
+                # alg2 part
                 Q0_P1 = np.dot(Q0, P1)
                 alg2_a_mat = np.dot(Q0_P1, E2_inv_A2)
                 alg2_b_mat = np.dot(Q0_P1, E2_inv_B)
-                alg2_c_mat = Q0
+                alg2_c_mat = np.dot(Q0, Q1)
 
                 decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat, \
                                                alg2_b_mat, alg2_c_mat, matrix_c)
@@ -240,4 +252,46 @@ class Decoupling(object):
                 self.status = 'success'
 
             elif ind == 3:
-                pass
+
+                decoupled_sys = DecoupledIndexThree()
+                Q0 = adm_projs[0]
+                Q1 = adm_projs[1]
+                Q2 = adm_projs[2]
+                P0 = In - Q0
+                P1 = In - Q1
+                P2 = In - Q2
+
+                P0_P1_P2 = np.dot(P0, np.dot(P1, P2))
+                A3 = np.dot(A0, P0_P1_P2)
+                E3_inv_A3 = np.dot(e_mu_inv, A3)
+                E3_inv_B = np.dot(e_mu_inv, matrix_b)
+                # ode part
+                ode_a_mat = np.dot(P0_P1_P2, E3_inv_A3)
+                ode_b_mat = np.dot(P0_P1_P2, E3_inv_B)
+
+                # alg1 part
+                P0_P1_Q2 = np.dot(P0, np.dot(P1, Q2))
+                alg1_a_mat = np.dot(P0_P1_Q2, E3_inv_A3)
+                alg1_b_mat = np.dot(P0_P1_Q2, E3_inv_B)
+
+                # alg2 part
+                P0_Q1_P2 = np.dot(P0, np.dot(Q1, P2))
+                alg2_a_mat = np.dot(P0_Q1_P2, E3_inv_A3)
+                alg2_b_mat = np.dot(P0_Q1_P2, E3_inv_B)
+                alg2_c_mat = np.dot(P0, np.dot(Q1, Q2))
+
+                # alg3 part
+                Q0_P1_P2 = np.dot(Q0, np.dot(P1, P2))
+                alg3_a_mat = np.dot(Q0_P1_P2, E3_inv_A3)
+                alg3_b_mat = np.dot(Q0_P1_P2, E3_inv_B)
+                alg3_c_mat = np.dot(Q0, Q1)
+                alg3_d_mat = np.dot(Q0, np.dot(P1, Q2))
+
+                decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, \
+                                               alg2_a_mat, alg2_b_mat, alg2_c_mat, alg3_a_mat, \
+                                               alg3_b_mat, alg3_c_mat, alg3_d_mat, matrix_c)
+
+                self.decoupled_sys = decoupled_sys
+                self.status = 'success'
+
+        return self.decoupled_sys, self.status

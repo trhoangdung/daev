@@ -76,6 +76,32 @@ class ReachSet(object):
 
         return status, fes_alpha, unsafe_state, unsafe_vec
 
+    def multiply(self, direction_matrix):
+        'project reachset onto a specific direction'
+
+        assert self.S is not None, 'error: empty set'
+        assert isinstance(direction_matrix, np.ndarray)
+        assert direction_matrix.shape[1] == self.S.shape[0]
+
+        projected_reach_set = ReachSet()
+        projected_S = np.dot(direction_matrix, self.S)
+        projected_reach_set.set_params(projected_S, self.alpha_min_vec, self.alpha_max_vec)
+
+        return projected_reach_set
+
+    def add(self, other_reachset):
+        'add itself with other reachset'
+
+        assert isinstance(other_reachset, ReachSet)
+        assert other_reachset.alpha_min_vec == self.alpha_min_vec, 'error: inconsistency, can not add'
+        assert other_reachset.alpha_max_vec == self.alpha_max_vec, 'error: inconsistency, can not add'
+
+        new_reach_set = ReachSet()
+        new_S = other_reachset.S + self.S
+        new_reach_set.set_params(new_S, self.alpha_min_vec, self.alpha_max_vec)
+
+        return new_reach_set
+
 
 class InitSet(object):
     'initial set of states and inputs'

@@ -8,6 +8,9 @@ import numpy as np
 from daev.engine.set import ReachSet, InitSet
 from daev.engine.decoupling import AutonomousDecoupledIndexOne
 from scipy.integrate import ode
+from scipy.sparse import csc_matrix
+from daev.daes import index_1_daes
+from daev.engine.dae_automaton import DaeAutomation, AutonomousDaeAutomation
 
 
 class ReachSetAssembler(object):
@@ -158,6 +161,23 @@ def test_reach_autonomous_ode():
     print "\nreachable set computation runtime = {}".format(runtime)
     print "\nreachable set list = {}".format(reach_set_list)
 
+
+def test_reach_autonomous_dae_index_1():
+    'test reachable set computation of autonomous dae with index 1'
+
+    E, A, B, C = index_1_daes().RLC_circuit(1.0, 1.0, 1.0)
+    dae_sys = DaeAutomation()
+    dae_sys.set_dynamics(csc_matrix(E), csc_matrix(A), csc_matrix(B), csc_matrix(C))
+    u_mat = np.array([-1])
+
+    dae_auto = dae_sys.convert_to_autonomous_dae(csc_matrix(u_mat))
+
+    print "\ndae_auto matrix_e = {}".format(dae_auto.matrix_e.todense())
+    print "\ndae_auto matrix_a = {}".format(dae_auto.matrix_a.todense())
+    print "\ndae_auto matrix_c = {}".format(dae_auto.matrix_c.todense())
+
+
 if __name__ == '__main__':
-    #test_ode_sim()
-    test_reach_autonomous_ode()
+    # test_ode_sim()
+    # test_reach_autonomous_ode()
+    test_reach_autonomous_dae_index_1()

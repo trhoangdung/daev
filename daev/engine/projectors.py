@@ -6,7 +6,7 @@ from scipy.sparse import issparse
 from scipy.linalg import svd
 import time
 import numpy as np
-from daes import index_1_daes, index_2_daes, index_3_daes
+from daev.daes import index_1_daes, index_2_daes, index_3_daes
 
 
 def null_space(matrix_a):

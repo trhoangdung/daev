@@ -171,9 +171,12 @@ def test_reach_autonomous_dae_index_1():
     dae_sys.set_dynamics(csc_matrix(E), csc_matrix(A), csc_matrix(B), csc_matrix(C))
     u_mat = np.array([-1])
 
+    print "\nrank of E is = {}".format(np.linalg.matrix_rank(E))
+
     dae_auto = dae_sys.convert_to_autonomous_dae(csc_matrix(u_mat))
 
     print "\ndae_auto matrix_e = {}".format(dae_auto.matrix_e.todense())
+    print "\nrank of new E = {}".format(np.linalg.matrix_rank(dae_auto.matrix_e.todense()))
     print "\ndae_auto matrix_a = {}".format(dae_auto.matrix_a.todense())
     print "\ndae_auto matrix_c = {}".format(dae_auto.matrix_c.todense())
 

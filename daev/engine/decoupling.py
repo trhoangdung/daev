@@ -492,7 +492,7 @@ class DecouplingAutonomous(object):
         matrix_a = auto_dae_automaton.matrix_a
         matrix_c = auto_dae_automaton.matrix_c
 
-        n, _ = matrix_a.shape[0]
+        n = matrix_a.shape[0]
         In = np.eye(n, dtype=float)
 
         adm_projs, e_mu_inv, _ = admissible_projectors(matrix_e, matrix_a)

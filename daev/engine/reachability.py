@@ -10,7 +10,8 @@ from daev.engine.decoupling import AutonomousDecoupledIndexOne
 from scipy.integrate import ode
 from scipy.sparse import csc_matrix
 from daev.daes import index_1_daes
-from daev.engine.dae_automaton import DaeAutomation, AutonomousDaeAutomation
+from daev.engine.dae_automaton import DaeAutomation
+from daev.engine.decoupling import DecouplingAutonomous
 
 
 class ReachSetAssembler(object):
@@ -175,6 +176,13 @@ def test_reach_autonomous_dae_index_1():
     print "\ndae_auto matrix_e = {}".format(dae_auto.matrix_e.todense())
     print "\ndae_auto matrix_a = {}".format(dae_auto.matrix_a.todense())
     print "\ndae_auto matrix_c = {}".format(dae_auto.matrix_c.todense())
+
+    decpl_dae, status = DecouplingAutonomous().get_decoupled_system(dae_auto)
+    print "\nstatus = {}".format(status)
+
+    print "\ndecoupled dae_auto ode_a_mat = {}".format(decpl_dae.ode_matrix_a)
+    print "\ndecoupled dae_auto alg_a_mat = {}".format(decpl_dae.alg_matrix_a)
+    print "\nprojectors = {}".format(decpl_dae.projectors[0])
 
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ class DecoupledIndexOne(object):
         self.alg_matrix_a = None    # algebraic constraint part
         self.alg_matrix_b = None    # algebraic constraint part
         self.out_matrix_c = None    # output matrix
+        self.projectors = None    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg_a_mat, alg_b_mat, c_mat):
         'set dynamics for decoupled system'
@@ -46,6 +47,13 @@ class DecoupledIndexOne(object):
         self.alg_matrix_b = alg_b_mat
         self.out_matrix_c = c_mat
 
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 1, 'error: invalid projector list'
+        self.projectors = projectors_list
+
 
 class AutonomousDecoupledIndexOne(object):
     'AutonomousDecoupled system of index-1 dae'
@@ -60,6 +68,7 @@ class AutonomousDecoupledIndexOne(object):
         self.ode_matrix_a = None    # ode part
         self.alg_matrix_a = None    # algebraic constraint part
         self.out_matrix_c = None    # output matrix
+        self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, alg_a_mat, c_mat):
         'set dynamics for decoupled system'
@@ -77,6 +86,13 @@ class AutonomousDecoupledIndexOne(object):
         self.ode_matrix_a = ode_a_mat
         self.alg_matrix_a = alg_a_mat
         self.out_matrix_c = c_mat
+
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 1, 'error: invalid projector list'
+        self.projectors = projectors_list
 
 
 class DecoupledIndexTwo(object):
@@ -98,6 +114,7 @@ class DecoupledIndexTwo(object):
         self.alg2_matrix_b = None    # algebraic constraints part 2
         self.alg2_matrix_c = None    # algebraic constraints part 2
         self.out_matrix_c = None     # output matrix
+        self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg1_a_mat,
                      alg1_b_mat, alg2_a_mat, alg2_b_mat, alg2_c_mat, c_mat):
@@ -131,6 +148,13 @@ class DecoupledIndexTwo(object):
         self.alg2_matrix_c = alg2_c_mat
         self.out_matrix_c = c_mat
 
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 2, 'error: invalid projector list'
+        self.projectors = projectors_list
+
 
 class AutonomousDecoupledIndexTwo(object):
     'AutonomousDecoupled system of index-2 dae'
@@ -148,6 +172,7 @@ class AutonomousDecoupledIndexTwo(object):
         self.alg2_matrix_a = None    # algebraic constraints part 2
         self.alg2_matrix_c = None    # algebraic constraints part 2
         self.out_matrix_c = None     # output matrix
+        self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, alg1_a_mat, alg2_a_mat, alg2_c_mat, c_mat):
         'set dynamics for decoupled system'
@@ -171,6 +196,13 @@ class AutonomousDecoupledIndexTwo(object):
         self.alg2_matrix_a = alg2_a_mat
         self.alg2_matrix_c = alg2_c_mat
         self.out_matrix_c = c_mat
+
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 2, 'error: invalid projector list'
+        self.projectors = projectors_list
 
 
 class DecoupledIndexThree(object):
@@ -197,6 +229,7 @@ class DecoupledIndexThree(object):
         self.alg3_matrix_c = None    # alg3 part
         self.alg3_matrix_d = None    # alg3 part
         self.out_matrix_c = None    # output matrix
+        self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat,
                      alg2_b_mat, alg2_c_mat, alg3_a_mat, alg3_b_mat, alg3_c_mat, alg3_d_mat, c_mat):
@@ -241,6 +274,13 @@ class DecoupledIndexThree(object):
         self.alg3_matrix_d = alg3_d_mat
         self.out_matrix_c = c_mat
 
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 3, 'error: invalid projector list'
+        self.projectors = projectors_list
+
 
 class AutonomousDecoupledIndexThree(object):
     'Autonomous Decoupled system of index-3 dae'
@@ -262,6 +302,7 @@ class AutonomousDecoupledIndexThree(object):
         self.alg3_matrix_c = None    # alg3 part
         self.alg3_matrix_d = None    # alg3 part
         self.out_matrix_c = None    # output matrix
+        self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
 
     def set_dynamics(self, ode_a_mat, alg1_a_mat, alg2_a_mat,
                      alg2_c_mat, alg3_a_mat, alg3_c_mat, alg3_d_mat, c_mat):
@@ -295,6 +336,13 @@ class AutonomousDecoupledIndexThree(object):
         self.alg3_matrix_c = alg3_c_mat
         self.alg3_matrix_d = alg3_d_mat
         self.out_matrix_c = c_mat
+
+    def set_projectors(self, projectors_list):
+        'store projectors of decoupling process'
+
+        assert isinstance(projectors_list, list)
+        assert len(projectors_list) == 3, 'error: invalid projector list'
+        self.projectors = projectors_list
 
 
 class Decoupling(object):
@@ -344,6 +392,7 @@ class Decoupling(object):
                 alg_a_mat = np.dot(Q0, e_mu_inv_A0)
                 alg_b_mat = np.dot(Q0, e_mu_inv_B)
                 decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg_a_mat, alg_b_mat, matrix_c)
+                decoupled_sys.set_projectors(adm_projs)
 
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
@@ -376,6 +425,7 @@ class Decoupling(object):
                 decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat, \
                                                alg2_b_mat, alg2_c_mat, matrix_c)
 
+                decoupled_sys.set_projectors(adm_projs)
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
@@ -418,7 +468,7 @@ class Decoupling(object):
                 decoupled_sys.set_dynamics(ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, \
                                                alg2_a_mat, alg2_b_mat, alg2_c_mat, alg3_a_mat, \
                                                alg3_b_mat, alg3_c_mat, alg3_d_mat, matrix_c)
-
+                decoupled_sys.set_projectors(adm_projs)
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
@@ -468,7 +518,7 @@ class DecouplingAutonomous(object):
                 # alg part
                 alg_a_mat = np.dot(Q0, e_mu_inv_A0)
                 decoupled_sys.set_dynamics(ode_a_mat, alg_a_mat, matrix_c)
-
+                decoupled_sys.set_projectors(adm_projs)
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
@@ -494,7 +544,7 @@ class DecouplingAutonomous(object):
                 alg2_c_mat = np.dot(Q0, Q1)
 
                 decoupled_sys.set_dynamics(ode_a_mat, alg1_a_mat, alg2_a_mat, alg2_c_mat, matrix_c)
-
+                decoupled_sys.set_projectors(adm_projs)
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
@@ -530,7 +580,7 @@ class DecouplingAutonomous(object):
                 alg3_d_mat = np.dot(Q0, np.dot(P1, Q2))
 
                 decoupled_sys.set_dynamics(ode_a_mat, alg1_a_mat, alg2_a_mat, alg2_c_mat, alg3_a_mat, alg3_c_mat, alg3_d_mat, matrix_c)
-
+                decoupled_sys.set_projectors(adm_projs)
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 

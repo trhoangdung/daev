@@ -6,6 +6,7 @@ Dung Tran: Dec/2017
 import time
 import numpy as np
 from daev.engine.set import ReachSet, InitSet
+from daev.engine.decoupling import DecoupledIndexOne
 from scipy.integrate import ode
 
 
@@ -91,6 +92,19 @@ class ReachSetAssembler(object):
         runtime = time.time() - start
 
         return reach_set_list, runtime
+
+    @staticmethod
+    def reach_dae_index_1(decoupled_sys, init_reachset, totime, num_steps, solver_name):
+        'compute reachable set of index-1 dae system'
+
+        assert isinstance(decoupled_sys, DecoupledIndexOne), 'error: decoupled system is not index 1'
+        assert isinstance(init_reachset, ReachSet), 'error: init_reach set is not a ReachSet type'
+        assert isinstance(totime, float) and totime > 0, 'error: invalid final time'
+        assert isinstance(num_steps, int) and num_steps > 0, 'error: invalid number of steps'
+
+        if solver_name != 'vode' and solver_name != 'zvode' and solver_name != 'Isoda' and solver_name != 'dopri5' and solver_name != 'dop853':
+            raise ValueError('error: invalid solver name')
+
 
 
 def test_ode_sim():

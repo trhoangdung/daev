@@ -21,7 +21,8 @@ def test_ode_sim():
     final_time = 2.0
     num_steps = 10
 
-    solution, runtime = ReachSetAssembler().ode_sim(A, init_vec, final_time, num_steps, 'dopri5')
+    solution, runtime = ReachSetAssembler().ode_sim(
+        A, init_vec, final_time, num_steps, 'dopri5')
 
     print "\nsolution = {}".format(solution)
     print "\nruntime = {}".format(runtime)
@@ -39,7 +40,8 @@ def test_reach_autonomous_ode():
     totime = 2.0
     num_steps = 20
     solver_name = 'dopri5'
-    reach_set_list, runtime = ReachSetAssembler.reach_autonomous_ode(A, initSet, totime, num_steps, solver_name)
+    reach_set_list, runtime = ReachSetAssembler.reach_autonomous_ode(
+        A, initSet, totime, num_steps, solver_name)
     print "\nreachable set computation runtime = {}".format(runtime)
     print "\nreachable set list = {}".format(reach_set_list)
 
@@ -50,7 +52,11 @@ def test_reach_autonomous_dae_index_1():
     # RCL circuit example
     E, A, B, C = index_1_daes().RLC_circuit(1.0, 1.0, 1.0)
     dae_sys = DaeAutomation()
-    dae_sys.set_dynamics(csc_matrix(E), csc_matrix(A), csc_matrix(B), csc_matrix(C))
+    dae_sys.set_dynamics(
+        csc_matrix(E),
+        csc_matrix(A),
+        csc_matrix(B),
+        csc_matrix(C))
     u_mat = np.array([-1])
 
     dae_auto = dae_sys.convert_to_autonomous_dae(csc_matrix(u_mat))
@@ -80,6 +86,11 @@ def test_reach_autonomous_dae_index_1():
     print "\ninit Set alpha_min = {}".format(initSet.alpha_min_vec)
     print "\ninit Set alpha_max = {}".format(initSet.alpha_max_vec)
 
+    totime = 2.0
+    num_steps = 10
+    solver_name = 'dopri5'
+    reach_set_list, runtime = ReachSetAssembler().reach_autonomous_dae_index_1(
+        decpl_dae, initSet, totime, num_steps, solver_name)
 
 
 if __name__ == '__main__':

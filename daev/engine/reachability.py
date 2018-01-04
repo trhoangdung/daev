@@ -11,7 +11,6 @@ from daev.engine.dae_automaton import DaeAutomation
 from scipy.integrate import ode
 
 
-
 class ReachSetAssembler(object):
     'implements rechable set computation for odes, daes'
 
@@ -121,6 +120,10 @@ class ReachSetAssembler(object):
         # x(0)
         S0 = init_reachset.S
 
+        print "\nA2 = {}".format(A2)
+        print "\nS0 = {}".format(S0)
+        print "\nA2 * S0 = {}".format(np.dot(A2, S0))
+
         if np.linalg.norm(np.dot(A2, S0)) > 1e-6:
             raise ValueError('error: inconsistent initial condition')
         else:
@@ -138,3 +141,32 @@ class ReachSetAssembler(object):
         runtime = time.time() - start
 
         return x_reach_set_list, runtime
+
+    @staticmethod
+    def generate_consistent_init_condition(decoupled_sys):
+        'generate a space for consistent initial condition'
+
+        # initset is X(0) = S(0) * alpha
+        # for index-1 decoupled autonomous dae
+        # consistent condition is : x2(0) = A2 * x1(0), x2 = Q * x, x1 = P * x
+        # thus, we need: QS(0) = A2 * P * S(0) or S(0) is null-space of (Q - A2 * P)
+
+
+        # for index-2 decoupled autonomous dae
+        # the consistent condition is: x2(0) = A2 * x1(0), x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
+        # to make it simple we further assume that dot{x}(0) = 0
+        # thus the consistent condition is:
+        #            1) Q1*S(0) = A2 * P0 * P1 * S(0)
+        #            2) Q0*S(0) = A3 * P0 * P1 * S(0)
+        # or S(0) is a null space of V, where V = [Q1 - A2 * P1; Q0 - A3 * P1]
+
+
+        # for index-3 decoupled autonomous dae
+        # the consistent condition is:
+        #            1) x2(0) = A2 * x1(0)
+        #            2) x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
+        #            3) x4(0) = A4 * x1(0) + C4 * dot{x3}(0) + D4 * dot{x2}(0)
+        # to make it simple we futher assume that: dot{x}(0) = 0
+        # thus, the consistent condition becomes:
+        #            1) P0 * P1 * Q2 * S(0) = A2 * P0 * P1 * P2 * S(0)
+        #            2)

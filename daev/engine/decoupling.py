@@ -143,7 +143,7 @@ class DecoupledIndexTwo(object):
         self.ode_matrix_b = ode_b_mat
         self.alg1_matrix_a = alg1_a_mat
         self.alg1_matrix_b = alg1_b_mat
-        self.alg2_matrix_a = alg2_a_mat
+        selff.alg2_matrix_a = alg2_a_mat
         self.alg2_matrix_b = alg2_b_mat
         self.alg2_matrix_c = alg2_c_mat
         self.out_matrix_c = c_mat
@@ -358,12 +358,14 @@ class Decoupling(object):
 
         assert isinstance(dae_automaton, DaeAutomation)
 
-        matrix_e = dae_automaton.matrix_e
-        matrix_a = dae_automaton.matrix_a
-        matrix_b = dae_automaton.matrix_b
-        matrix_c = dae_automaton.matrix_c
+        matrix_e = dae_automaton.matrix_e.todense()
+        matrix_a = dae_automaton.matrix_a.todense()
+        matrix_b = dae_automaton.matrix_b.todense()
+        print "\nmatrix_b = {}".format(matrix_b)
+        matrix_c = dae_automaton.matrix_c.todense()
+        print "\nmatrix_c = {}".format(matrix_c)
 
-        n, _ = matrix_a.shape[0]
+        n = matrix_a.shape[0]
         In = np.eye(n, dtype=float)
 
         adm_projs, e_mu_inv, _ = admissible_projectors(matrix_e, matrix_a)
@@ -488,9 +490,9 @@ class DecouplingAutonomous(object):
 
         assert isinstance(auto_dae_automaton, AutonomousDaeAutomation)
 
-        matrix_e = auto_dae_automaton.matrix_e
-        matrix_a = auto_dae_automaton.matrix_a
-        matrix_c = auto_dae_automaton.matrix_c
+        matrix_e = auto_dae_automaton.matrix_e.todense()
+        matrix_a = auto_dae_automaton.matrix_a.todense()
+        matrix_c = auto_dae_automaton.matrix_c.todense()
 
         n = matrix_a.shape[0]
         In = np.eye(n, dtype=float)

@@ -71,7 +71,7 @@ def admissible_projectors(matrix_e, matrix_a):
         assert E0.shape[0] == E0.shape[1], 'invalid matrix E'
 
     if issparse(matrix_a):
-        A0 = matrix_e.todense()
+        A0 = matrix_a.todense()
         assert A0.shape[0] == A0.shape[1], 'invalid matrix A'
     else:
         assert isinstance(matrix_a, np.ndarray)
@@ -88,7 +88,7 @@ def admissible_projectors(matrix_e, matrix_a):
 
     rank_E0 = np.linalg.matrix_rank(E0)
     if rank_E0 == m:
-        print "\nsystem is index-0, dae can be convert to ode by inverse(E) * A"
+        print "\nsystem is index-0, dae can be converted to ode by inverse(E) * A"
     else:
         Q0, _ = orth_projector_on_ker_a(E0)
         E1 = E0 - np.dot(A0, Q0)

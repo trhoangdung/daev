@@ -11,7 +11,7 @@ from scipy.integrate import ode
 from scipy.sparse import csc_matrix
 from daev.daes import index_1_daes
 from daev.engine.dae_automaton import DaeAutomation
-from daev.engine.decoupling import DecouplingAutonomous
+from daev.engine.decoupling import Decoupling, DecouplingAutonomous
 
 
 class ReachSetAssembler(object):
@@ -172,6 +172,8 @@ def test_reach_autonomous_dae_index_1():
     u_mat = np.array([-1])
 
     print "\nrank of E is = {}".format(np.linalg.matrix_rank(E))
+    decoupled_sys, status0 = Decoupling().get_decoupled_system(dae_sys)
+    print "\ndecoupling status = {}".format(status0)
 
     dae_auto = dae_sys.convert_to_autonomous_dae(csc_matrix(u_mat))
 

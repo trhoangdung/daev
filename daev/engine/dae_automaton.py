@@ -30,7 +30,7 @@ class DaeAutomation(object):
         assert matrix_a.shape[0] == matrix_a.shape[1] == matrix_b.shape[0], 'inconsistent matrices'
         assert matrix_c.shape[1] == matrix_a.shape[0], 'inconsistent matrices'
         n = matrix_e.shape[0]
-        rank_e = np.rank(matrix_e.todense())
+        rank_e = np.linalg.matrix_rank(matrix_e.todense())
 
         if rank_e == n:
             print "matrix_e is non-singluar, dae is equivalent to ode"
@@ -96,7 +96,7 @@ class AutonomousDaeAutomation(object):
         assert matrix_a.shape[0] == matrix_a.shape[1], 'invalid matrix_a'
         assert matrix_c.shape[1] == matrix_a.shape[0], 'inconsistent matrices'
         n = matrix_e.shape[0]
-        rank_e = np.rank(matrix_e.todense())
+        rank_e = np.linalg.matrix_rank(matrix_e.todense())
 
         if rank_e == n:
             print "matrix_e is non-singluar, dae is equivalent to ode"

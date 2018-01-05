@@ -147,6 +147,7 @@ class ReachSetAssembler(object):
     def generate_consistent_init_condition(decoupled_sys):
         'generate a space for consistent initial condition'
 
+        start = time.time()
         assert isinstance(decoupled_sys, AutonomousDecoupledIndexOne) or \
           isinstance(decoupled_sys, AutonomousDecoupledIndexTwo) or \
           isinstance(decoupled_sys, AutonomousDecoupledIndexThree)
@@ -227,8 +228,12 @@ class ReachSetAssembler(object):
             V30 = A4 + np.dot(C4, np.dot(A3, A1)) + np.dot(C3, np.dot(A2, np.dot(A1, A1))) + np.dot(D4, np.dot(A2, A1))
             V3 = Q0 - np.dot(V30, P0_P1_P2)
 
-            V = np.vstack(V1, V2, V3)
+            V = np.vstack((V1, V2, V3))
             S0, _ = null_space(V)
 
+        else:
+            print "\nunknown type of decoupled system"
 
-        return S0
+        runtime = time.time() - start
+
+        return S0, runtime

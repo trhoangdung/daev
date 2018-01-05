@@ -415,8 +415,8 @@ class Decoupling(object):
                 ode_b_mat = np.dot(P0_P1, E2_inv_B)
 
                 # alg1 part
-                alg1_a_mat = np.dot(Q1, E2_inv_A2)
-                alg1_b_mat = np.dot(Q1, E2_inv_B)
+                alg1_a_mat = np.dot(P0, np.dot(Q1, E2_inv_A2))
+                alg1_b_mat = np.dot(P0, np.dot(Q1, E2_inv_B))
 
                 # alg2 part
                 Q0_P1 = np.dot(Q0, P1)
@@ -538,7 +538,7 @@ class DecouplingAutonomous(object):
                 ode_a_mat = np.dot(P0_P1, E2_inv_A2)
 
                 # alg1 part
-                alg1_a_mat = np.dot(Q1, E2_inv_A2)
+                alg1_a_mat = np.dot(P0, np.dot(Q1, E2_inv_A2))
 
                 # alg2 part
                 Q0_P1 = np.dot(Q0, P1)

@@ -147,36 +147,18 @@ class ReachSetAssembler(object):
     def generate_consistent_init_condition(decoupled_sys):
         'generate a space for consistent initial condition'
 
-        # initset is X(0) = S(0) * alpha
-        # for index-1 decoupled autonomous dae
-        # consistent condition is : x2(0) = A2 * x1(0), x2 = Q * x, x1 = P * x
-        # thus, we need: Q * S(0) = A2 * P * S(0) or S(0) is null-space of (Q - A2 * P)
-
-        # for index-2 decoupled autonomous dae
-        # the consistent condition is: x2(0) = A2 * x1(0), x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
-        # where:     x1 = P0 * P1 * x, x2 = Q1 * x, x3 = Q0 * x
-        # thus the consistent condition is:
-        #            1) Q1 * S(0) = A2 * P0 * P1 * S(0)
-        #            2) Q0 * S(0) = A3 * P0 * P1 * S(0) + C3 * A2 * A1 * P0 * P1 * S(0)
-        # or S(0) is a null space of V, where V = [Q1 - A2 * P0 * P1; Q0 - A3 * P0 * P1 - C3 * A2 * A1 * P0 * P1]
-
-        # for index-3 decoupled autonomous dae
-        # the consistent condition is:
-        #            1) x2(0) = A2 * x1(0)
-        #            2) x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
-        #            3) x4(0) = A4 * x1(0) + C4 * dot{x3}(0) + D4 * dot{x2}(0)
-        # to make it simple we futher assume that: dot{x}(0) = 0
-        # thus, the consistent condition becomes:
-        #            1) P0 * P1 * Q2 * S(0) = A2 * P0 * P1 * P2 * S(0)
-        #            2)
-
-
         assert isinstance(decoupled_sys, AutonomousDecoupledIndexOne) or \
           isinstance(decoupled_sys, AutonomousDecoupledIndexTwo) or \
           isinstance(decoupled_sys, AutonomousDecoupledIndexThree)
 
         S0 = None
         if decoupled_sys.name == 'AutonomousDecoupledIndexOne':
+
+            # initset is X(0) = S(0) * alpha
+            # for index-1 decoupled autonomous dae
+            # consistent condition is : x2(0) = A2 * x1(0), x2 = Q * x, x1 = P * x
+            # thus, we need: Q * S(0) = A2 * P * S(0) or S(0) is null-space of (Q - A2 * P)
+
             Q0 = decoupled_sys.projectors[0]
             n = Q0.shape[0]
             In = np.eye(n, dtype=float)
@@ -187,6 +169,15 @@ class ReachSetAssembler(object):
             S0, _ = null_space(V)
 
         elif decoupled_sys.name == 'AutonomousDecoupledIndexTwo':
+
+            # for index-2 decoupled autonomous dae
+            # the consistent condition is: x2(0) = A2 * x1(0), x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
+            # where:     x1 = P0 * P1 * x, x2 = P0 * Q1 * x, x3 = Q0 * x
+            # thus the consistent condition is:
+            #            1) P0 * Q1 * S(0) = A2 * P0 * P1 * S(0)
+            #            2) Q0 * S(0) = (A3 + C3 * A2 * A1) * P0 * P1 * S(0)
+            # or S(0) is a null space of V, where V = [P0 * Q1 - A2 * P0 * P1; Q0 - (A3 + C3 * A2 * A1) * P0 * P1]
+
             Q0 = decoupled_sys.projectos[0]
             Q1 = decoupled_sys.projectors[1]
             n = Q0.shape[0]
@@ -197,12 +188,47 @@ class ReachSetAssembler(object):
             A2 = decoupled_sys.alg1_matrix_a
             A3 = decoupled_sys.alg2_matrix_a
             C3 = decoupled_sys.alg2_matrix_c
-            V1 = Q1 - np.dot(A2, np.dot(P0, P1))
+            V1 = np.dot(P0, Q1) - np.dot(A2, np.dot(P0, P1))
             V2 = Q0 - np.dot(A3, np.dot(P0, P1)) - np.dot(C3, np.dot(A2, np.dot(A1, np.dot(P0, P1))))
             V = np.vstack((V1, V2))
             S0, _ = null_space(V)
 
         elif decoupled_sys.name == 'AutonomousDecoupledIndexThree':
-            pass
+
+            # for index-3 decoupled autonomous dae
+            # the consistent condition is:
+            #            1) x2(0) = A2 * x1(0)
+            #            2) x3(0) = A3 * x1(0) + C3 * dot{x2}(0)
+            #            3) x4(0) = A4 * x1(0) + C4 * dot{x3}(0) + D4 * dot{x2}(0)
+            # where: x1 = P0 * P1 * P2 * x, x2 = P0 * P1 * Q2 * x, x3 = P0 * Q1, x4 = Q0
+            # thus, the consistent condition becomes:
+            #            1) P0 * P1 * Q2 * S(0) = A2 * P0 * P1 * P2 * S(0)
+            #            2) P0 * Q1 * S(0) = (A3 + C3 * A2 * A1) * P0 * P1 * P2 * S(0)
+            #            3) Q0 * S(0) = (A4 + C4 * A3 * A1 + C3 * A2 * A1 * A1 + D4 * A2 * A1) * P0 * P1 * P2 * S(0)
+
+            Q0 = decoupled_sys.projectors[0]
+            Q1 = decoupled_sys.projectors[1]
+            Q2 = decoupled_sys.projectors[2]
+            n = Q0.shape[0]
+            In = np.eye(n, dtype=float)
+            P0 = In - Q0
+            P1 = In - Q1
+            P2 = In - Q2
+            A1 = decoupled_sys.ode_matrix_a
+            A2 = decoupled_sys.alg1_matrix_a
+            A3 = decoupled_sys.alg2_matrix_a
+            C3 = decoupled_sys.alg2_matrix_c
+            A4 = decoupled_sys.alg3_matrix_a
+            C4 = decoupled_sys.alg3_matrix_c
+            D4 = decoupled_sys.alg3_matrix_d
+            P0_P1_P2 = np.dot(P0, P1, P2)
+            V1 = np.dot(P0, np.dot(P1, Q2)) - np.dot(A2, P0_P1_P2)
+            V2 = np.dot(P0, Q1) - np.dot(A3 + np.dot(C3, np.dot(A2, A1)), P0_P1_P2)
+            V30 = A4 + np.dot(C4, np.dot(A3, A1)) + np.dot(C3, np.dot(A2, np.dot(A1, A1))) + np.dot(D4, np.dot(A2, A1))
+            V3 = Q0 - np.dot(V30, P0_P1_P2)
+
+            V = np.vstack(V1, V2, V3)
+            S0, _ = null_space(V)
+
 
         return S0

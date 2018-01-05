@@ -559,6 +559,7 @@ class DecouplingAutonomous(object):
                 P0 = In - Q0
                 P1 = In - Q1
                 P2 = In - Q2
+                A0 = matrix_a
 
                 P0_P1_P2 = np.dot(P0, np.dot(P1, P2))
                 A3 = np.dot(A0, P0_P1_P2)

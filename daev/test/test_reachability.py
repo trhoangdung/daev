@@ -89,8 +89,13 @@ def test_reach_autonomous_dae_index_1():
     totime = 2.0
     num_steps = 10
     solver_name = 'dopri5'
-    reach_set_list, runtime = ReachSetAssembler().reach_autonomous_dae_index_1(
-        decpl_dae, initSet, totime, num_steps, solver_name)
+    #reach_set_list, runtime = ReachSetAssembler().reach_autonomous_dae_index_1(
+    #    decpl_dae, initSet, totime, num_steps, solver_name)
+
+    # generate consistent initial condition
+
+    cons_init_cond = ReachSetAssembler().generate_consistent_init_condition(decpl_dae)
+
 
 
 if __name__ == '__main__':

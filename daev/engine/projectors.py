@@ -2,9 +2,10 @@
 This module implements projectors used to decoupling the DAE equation
 Dung Tran: Dec/2017
 '''
+
+import time
 from scipy.sparse import issparse
 from scipy.linalg import svd
-import time
 import numpy as np
 from daev.daes import index_1_daes, index_2_daes, index_3_daes
 

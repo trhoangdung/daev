@@ -148,9 +148,9 @@ def admissible_projectors(matrix_e, matrix_a):
 
 
 def admissible_projectors_full(matrix_e, matrix_a):
-    'constructing admissible projectors for regular matrix pencil (E, A) with arbitrary index'
+    'forward algorithm for constructing admissible projectors for regular matrix pencil (E, A) with arbitrary index'
 
-    # return list of admissible projectors, length of the list = index of (E, A)
+    # return 1) index 2)list of projectors 3) list of E 4) list of matrix A
 
     start = time.time()
     if issparse(matrix_e):
@@ -171,63 +171,89 @@ def admissible_projectors_full(matrix_e, matrix_a):
 
     assert A0.shape[0] == E0.shape[0], 'inconsistent matrices'
 
-    admissible_projectors = []
-    e_mu_inv = None    # used to construct decoupled systems
-
     m = A0.shape[0]
     Im = np.eye(m, dtype=float)
 
-    E = E0.copy()
-    A = A0.copy()
-    rank_E = np.linalg.matrix_rank(E)
-    projectors = []    # contain projectors not yet admissible
+    admissible_projectors = []    # admissible projectors
     E_list = []
     A_list = []
-    while (rank_E != m):
-        Q, _ = orth_projector_on_ker_a(E)
-        projectors.append(Q)    # used to construct admissible projectors
-        E_list.append(E)    # used to construct admissible projectors
-        A_list.append(A)
-        E = E - np.dot(A, Q)
-        A = np.dot(A, Im - Q)
-        rank_E = np.linalg.matrix_rank(E)
 
-    E_inv = np.linalg.inv(E)    # used to construct admissible projectors
+    rank_E0 = np.linalg.matrix_rank(E0)
+    if rank_E0 == m:
+        print "\nsystem is index-0, dae can be converted to ode by inverse(E) * A"
+    else:
+        Q0, _ = orth_projector_on_ker_a(E0)
+        E1 = E0 - np.dot(A0, Q0)
+        rank_E1 = np.linalg.matrix_rank(E1)
+        if rank_E1 == m:
+            print "\nsystem is index-1"
+            admissible_projectors.append(Q0)
+            E_list.append(E0)
+            E_list.append(E1)
+            A_list.append(A0)
+        else:
+            Q1, _ = orth_projector_on_ker_a(E1)
+            P0 = Im - Q0
+            A1 = np.dot(A0, P0)
+            E2 = E1 - np.dot(A1, Q1)
+            rank_E2 = np.linalg.matrix_rank(E2)
+            if rank_E2 == m:
+                # print "\nsystem is index-2"
+                # compute admissible Q1*
+                E2_inv = np.linalg.inv(E2)
+                E2_inv_A1 = np.dot(E2_inv, A1)
+                admissible_Q1 = np.dot(-Q1, E2_inv_A1)
+                admissible_projectors.append(Q0)
+                admissible_projectors.append(admissible_Q1)
+                E2_new = E1 - np.dot(A1, admissible_Q1)
+                E_list.append(E0)
+                E_list.append(E1)
+                E_list.append(E2_new)
+                A_list.append(A0)
+                A_list.append(A1)
 
-    # constructing admissible projectors: "BACKWARD CONSTRUCTION ALGORITHM"
-    ind = len(projectors)    # index of the system
+            else:
+                Q2, _ = orth_projector_on_ker_a(E2)
+                P1 = Im - Q1
+                A2 = np.dot(A1, P1)
+                E3 = E2 - np.dot(A2, Q2)
+                rank_E3 = np.linalg.matrix_rank(E3)
+                if rank_E3 == m:
+                    # print "\nsystem is index-3"
+                    # compute admissible projectors Q2*, Q1*
+                    E3_inv = np.linalg.inv(E3)
+                    E3_inv_A2 = np.dot(E3_inv, A2)
+                    Q2_1 = np.dot(-Q2, E3_inv_A2)
+                    P2_1 = Im - Q2_1
+                    E3_inv_A1 = np.dot(E3_inv, A1)
+                    admissible_Q1 = np.dot(-Q1, np.dot(P2_1, E3_inv_A1))
+                    E2_new = E1 - np.dot(A1, admissible_Q1)
+                    Q2_2, _ = orth_projector_on_ker_a(E2_new)
+                    A2_new = np.dot(A1, Im - admissible_Q1)
+                    E3_2 = E2_new - np.dot(A2_new, Q2_2)
+                    E3_2_inv = np.linalg.inv(E3_2)
+                    admissible_Q2 = np.dot(-Q2_2, np.dot(E3_2_inv, A2_new))
 
-    # the last admissible projector can be chosen by:
-    # Q_ad_final = np.dot(-Q, np.dot(E_inv, A_list[ind - 1]))
-    # or:
-    Q_ad_final = Q
-    if ind == 0:
-        print "\nsystem has index-0, can be converted to ODE"
-    elif ind == 1:
-        admissible_projectors.append(projectors[0])
-    elif ind == 2:
-        admissible_projectors.append(projectors[0])
-        admissible_projectors.append(Q_ad_final)
-    elif ind > 2:
-        # construct Vi = [Q_ad[ind-1], Q_ad[ind-2], ..., Q_ad[i + 1], E[i]]^T
-        for i in xrange(0, ind - 1):
-            admissible_projectors.append([])
-        admissible_projectors.append(Q_ad_final)
+                    admissible_projectors.append(Q0)
+                    admissible_projectors.append(admissible_Q1)
+                    admissible_projectors.append(admissible_Q2)
 
-        for i in xrange(ind - 2, -1, -1):
-            Vi = E_list[i].copy()
-            for j in xrange(i + 1, ind):
-                Q_ad_j = admissible_projectors[j]
-                Vi = np.vstack((Q_ad_j, Vi))
-            print "\n %%%%%%%%%%%%%"
-            print "\nshape of Vi = {}".format(Vi.shape)
-            Q_ad_i, _ = orth_projector_on_ker_a(Vi)
-            admissible_projectors[i] = Q_ad_i
+                    E3_new = E2_new - np.dot(A2_new, admissible_Q2)
+                    E_list.append(E0)
+                    E_list.append(E1)
+                    E_list.append(E2_new)
+                    E_list.append(E3_new)
+                    A_list.append(A0)
+                    A_list.append(A1)
+                    A_list.append(A2_new)
 
-    end = time.time()
-    runtime = end - start
+                else:
+                    print "system has index > 3"
+                    admissible_projectors = 'error'
 
-    return admissible_projectors, runtime
+    runtime = time.time() - start
+
+    return admissible_projectors, E_list, A_list, runtime
 
 
 def test():
@@ -239,16 +265,23 @@ def test():
 
     # projs1, _ = admissible_projectors_full(E1, A1)
     # projs2, _ = admissible_projectors_full(E2, A2)
-    projs3, _ = admissible_projectors_full(E3, A3)
+    projs3, E_list, A_list, _ = admissible_projectors_full(E3, A3)
 
     # print "admissible projectors 1 : \n{}".format(projs1)
     # print "admissible projectors 2 : \n{}".format(projs2)
     # print "\nnorm of Q1 * Q0 = {}".format(np.linalg.norm(np.dot(projs2[1], projs2[0])))
-    print "admissible projectors 3 : \n{}".format(projs3)
+    print "\nindex of the DAE = {}".format(len(projs3))
     print "\nnorm of Q1 * Q0 = {}".format(np.linalg.norm(np.dot(projs3[1], projs3[0])))
     print "\nnorm of Q2 * Q0 = {}".format(np.linalg.norm(np.dot(projs3[2], projs3[0])))
     print "\nnorm of Q2 * Q1 = {}".format(np.linalg.norm(np.dot(projs3[2], projs3[1])))
+    print "\nnorm of Q0 = {}".format(np.linalg.norm(projs3[0]))
+    print "\nnorm of Q1 = {}".format(np.linalg.norm(projs3[1]))
+    print "\nnorm of Q2 = {}".format(np.linalg.norm(projs3[2]))
 
+    print "\nnorm of E3 - E2 + A2*Q2 = {}".format(np.linalg.norm(E_list[3] - E_list[2] + np.dot(A_list[2], projs3[2])))
+    print "\nnorm of E2 - E1 + A1*Q1 = {}".format(np.linalg.norm(E_list[2] - E_list[1] + np.dot(A_list[1], projs3[1])))
+    print "\nnorm of E1 - E0 + A0*Q0 = {}".format(np.linalg.norm(E_list[1] - E_list[0] + np.dot(A_list[0], projs3[0])))
 if __name__ == '__main__':
 
     test()
+    # test_forward_algorithm()

@@ -1,11 +1,12 @@
 '''
 This module implements decoupling techniques for high-index DAE
 Dung Tran: Dec/2017
+Update: Jan/2018
 '''
 
 import numpy as np
 from daev.engine.dae_automaton import DaeAutomation, AutonomousDaeAutomation
-from daev.engine.projectors import admissible_projectors
+from daev.engine.projectors import admissible_projectors, null_space
 from daev.engine.set import ReachSet
 
 
@@ -68,6 +69,8 @@ class AutonomousDecoupledIndexOne(object):
         self.name = 'AutonomousDecoupledIndexOne'
         self.N1 = None    # ode part
         self.N2 = None    # algebraic constraint part
+        self.reach_set_projector = None    # projector to compute the reachable set the original system
+
         self.out_matrix_c = None    # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
         self.consistent_matrix = None    # consistent matrix to check consistency of initial condition
@@ -87,6 +90,7 @@ class AutonomousDecoupledIndexOne(object):
 
         self.N1 = ode_a_mat
         self.N2 = alg_a_mat
+        self.reach_set_projector = np.eye(self.N2.shape[0]) + self.N2
         self.out_matrix_c = c_mat
 
     def set_projectors(self, projectors_list):
@@ -124,6 +128,16 @@ class AutonomousDecoupledIndexOne(object):
                 consistency = False
 
         return consistency
+
+    def generate_consistent_init_set_basic_matrix(self):
+        'automatically generate a consistent basic matrix for the initial set of state'
+
+        if self.consistent_matrix is None:
+            self.get_consistent_matrix()
+        else:
+            basic_matrix, _ = null_space(self.consistent_matrix)
+
+        return basic_matrix
 
 
 class DecoupledIndexTwo(object):
@@ -202,6 +216,8 @@ class AutonomousDecoupledIndexTwo(object):
         self.N2 = None    # algebraic constraints part 1
         self.N3 = None    # algebraic constraints part 2
         self.L3 = None    # algebraic constraints part 2
+        self.reach_set_projector = None    # projector to compute the reachable set the original system
+
         self.out_matrix_c = None     # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
         self.consistent_matrix = None    # consistent matrix to check consistency of initial condition
@@ -227,6 +243,8 @@ class AutonomousDecoupledIndexTwo(object):
         self.N2 = alg1_a_mat
         self.N3 = alg2_a_mat
         self.L3 = alg2_c_mat
+        self.reach_set_projector = np.eye(self.N1.shape[0]) + self.N2 + self.N3 + np.dot(self.L3, np.dot(self.N2, self.N1))
+
         self.out_matrix_c = c_mat
 
     def set_projectors(self, projectors_list):
@@ -270,6 +288,16 @@ class AutonomousDecoupledIndexTwo(object):
                 consistency = False
 
         return consistency
+
+    def generate_consistent_init_set_basic_matrix(self):
+        'automatically generate a consistent basic matrix for the initial set of state'
+
+        if self.consistent_matrix is None:
+            self.get_consistent_matrix()
+        else:
+            basic_matrix, _ = null_space(self.consistent_matrix)
+
+        return basic_matrix
 
 
 class DecoupledIndexThree(object):
@@ -368,6 +396,8 @@ class AutonomousDecoupledIndexThree(object):
         self.N4 = None    # alg3 part
         self.L4 = None    # alg3 part
         self.Z4 = None    # alg3 part
+        self.reach_set_projector = None    # projector to compute the reachable set the original system
+
         self.out_matrix_c = None    # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
         self.consistent_matrix = None    # consistent matrix to check consistency of initial condition
@@ -403,6 +433,14 @@ class AutonomousDecoupledIndexThree(object):
         self.N4 = alg3_a_mat
         self.L4 = alg3_c_mat
         self.Z4 = alg3_d_mat
+
+        # compute reach set projector
+        In = np.eye(self.N2.shape[0])
+        L3N2N1 = np.dot(self.L3, np.dot(self.N2, self.N1))
+        L4N3N1 = np.dot(self.L4, np.dot(self.N3, self.N1))
+        L4L3N2N1N1 = np.dot(self.L4, np.dot(self.L3, np.dot(self.N2, np.dot(self.N1, self.N1))))
+        Z4N2N1 = np.dot(self.Z4, np.dot(self.N2, self.N1))
+        self.reach_set_projector = In + self.N2 + self.N3 + self.N4 + L3N2N1 + L4N3N1 + L4L3N2N1N1 + Z4N2N1
         self.out_matrix_c = c_mat
 
     def set_projectors(self, projectors_list):
@@ -457,6 +495,16 @@ class AutonomousDecoupledIndexThree(object):
                 consistency = False
 
         return consistency
+
+    def generate_consistent_init_set_basic_matrix(self):
+        'automatically generate a consistent basic matrix for the initial set of state'
+
+        if self.consistent_matrix is None:
+            self.get_consistent_matrix()
+        else:
+            basic_matrix, _ = null_space(self.consistent_matrix)
+
+        return basic_matrix
 
 
 class Decoupling(object):

@@ -7,6 +7,19 @@ import numpy as np
 from scipy.optimize import linprog
 
 
+class LinearPredicate(object):
+    'class defines linear constraints on alpha parameters'
+    # define Cx <= d
+
+    def __init__(self, c_mat, d_vec):
+        assert isinstance(c_mat, np.ndarray), 'error: c matrix is not a np.ndarray'
+        assert isinstance(d_vec, np.ndarray) and d_vec.shape[1] == 1, 'error: invalid vector d'
+        assert c_mat.shape[0] == d_vec.shape[0], 'error: inconsistency between c-matrix and d-vector'
+
+        self.C = c_mat
+        self.d = d_vec
+
+
 class ReachSet(object):
     'class for contain reachable set using Star Set'
 
@@ -28,38 +41,64 @@ class ReachSet(object):
         self.S = None    # solution matrix S at time t
         self.alpha_min_vec = None    # constraint on alpha parameters
         self.alpha_max_vec = None
+        self.predicate = None    # predicate on alpha
+        # we can use alpha_min_vec and alpha_max_vec as the constraints on alpha when checking safety
+        # or the predicate P on alpha to check the safety
 
-    def set_params(self, S, alpha_min, alpha_max):
-        'set parameters for the Reach Set'
+    def set_predicate(self, P):
+        'set linear constraint on alpha P := C * alpha <= d'
+
+        assert isinstance(P, LinearPredicate)
+        self.predicate = P
+
+    def set_basic_matrix(self, S):
+        'set basic matrix S for the reach set'
 
         assert isinstance(S, np.ndarray)
+        if self.predicate is not None:
+            assert self.predicate.C.shape[1] == S.shape[1], 'error: inconsistency between the basic matrix and the predicate'
+        if self.alpha_min_vec is not None:
+            assert self.alpha_min_vec.shape[0] == S.shape[1], 'error: inconsistency between the basic matrix and the number of alpha_i'
+        self.S = S
+
+    def set_alpha_min_max(self, alpha_min, alpha_max):
+        'set range for alpha paramters'
+
         assert isinstance(alpha_min, np.ndarray) and alpha_min.shape[1] == 1
         assert isinstance(alpha_max, np.ndarray) and alpha_max.shape[1] == 1
-        assert alpha_min.shape[0] == S.shape[1] == alpha_max.shape[0]
-        self.S = S
+        assert alpha_min.shape[0] == alpha_max.shape[0]
+        if self.S is not None:
+            assert alpha_min.shape[0] == self.S.shape[1], 'error: inconsistency between the basic matrix and the number of alpha_i'
+
         self.alpha_min_vec = alpha_min
         self.alpha_max_vec = alpha_max
 
-    def check_safety(self, safe_mat, safe_vec):
+    def check_safety(self, unsafe_set):
         'checking safety'
 
         # we want to check : safe_mat * x <= safe_vec is feasible or not
         # if unfeasible, return safe
         # if feasisible, return unsafe and the feasisible solution alpha
 
+        assert isinstance(unsafe_set, LinearPredicate), 'error: unsafe set is not a Linear Predicate'
         assert self.S is not None, 'error: empty set'
-        assert isinstance(safe_mat, np.ndarray)
-        assert isinstance(safe_vec, np.ndarray), 'error: invalid safety constraint'
-        assert safe_mat.shape[0] == safe_vec.shape[0], 'error: inconsistent safe_mat and safe_vec'
-        assert safe_mat.shape[1] == self.S.shape[0], 'error: inconsistent safe_mat and self.S'
+        assert self.predicate is not None or self.alpha_min_vec is not None, 'error: no constraints on alpha'
 
-        constr_mat = np.dot(safe_mat, self.S)
+        constr_mat = np.dot(unsafe_set.C, self.S)
         n = self.S.shape[1]
         c_vec = np.ones(n)
         alpha_bounds = []
-        for i in xrange(0, n):
-            alpha_bounds.append((self.alpha_min_vec[i, 0], self.alpha_max_vec[i, 0]))
-        opt_res = linprog(c=c_vec, A_ub=constr_mat, b_ub=safe_vec, bounds=alpha_bounds)
+
+        # use alpha_min and alpha_max vector to check the safety
+        if self.alpha_min_vec is not None and self.alpha_max_vec is not None:
+
+            for i in xrange(0, n):
+                alpha_bounds.append((self.alpha_min_vec[i, 0], self.alpha_max_vec[i, 0]))
+
+            opt_res = linprog(c=c_vec, A_ub=constr_mat, b_ub=unsafe_set.d, bounds=alpha_bounds)
+
+        elif self.predicate is not None:
+            opt_res = linprog(c=c_vec, A_ub=np.vstack((constr_mat, self.predicate.C)), b_ub=np.vstack((unsafe_set.d, self.predicate.d)))
 
         if opt_res.status == 2:
             status = 'safe'
@@ -85,7 +124,12 @@ class ReachSet(object):
 
         projected_reach_set = ReachSet()
         projected_S = np.dot(direction_matrix, self.S)
-        projected_reach_set.set_params(projected_S, self.alpha_min_vec, self.alpha_max_vec)
+        projected_reach_set.set_basic_matrix(projected_S)
+
+        if self.predicate is not None:
+            projected_reach_set.set_predicate(self.predicate)
+        if self.alpha_min_vec is not None and self.alpha_max_vec is not None:
+            projected_reach_set.set_alpha_min_max(self.alpha_min_vec, self.alpha_max_vec)
 
         return projected_reach_set
 
@@ -98,7 +142,13 @@ class ReachSet(object):
 
         new_reach_set = ReachSet()
         new_S = other_reachset.S + self.S
-        new_reach_set.set_params(new_S, self.alpha_min_vec, self.alpha_max_vec)
+
+        if self.predicate is not None:
+            new_reach_set.set_predicate(self.predicate)
+        if self.alpha_min_vec is not None and self.alpha_max_vec is not None:
+            new_reach_set.set_alpha_min_max(self.alpha_min_vec, self.alpha_max_vec)
+
+        new_reach_set.set_basic_matrix(new_S)
 
         return new_reach_set
 
@@ -106,8 +156,10 @@ class ReachSet(object):
 class InitSet(object):
     'initial set of states and inputs'
 
-    # min_vec[i] <= x[i] <= max_vec[i]
+    # this class is not really useful for DAE reachability analysis since user-defined init set
+    # is usually not consistent
 
+    # min_vec[i] <= x[i] <= max_vec[i]
     def __init__(self):
         self.min_vec = None
         self.max_vec = None

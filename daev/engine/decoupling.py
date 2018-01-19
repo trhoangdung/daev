@@ -26,6 +26,7 @@ class DecoupledIndexOne(object):
         self.M2 = None    # algebraic constraint part
         self.out_matrix_c = None    # output matrix
         self.projectors = None    # projectors in decoupling process, used to check consistent initial condition
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg_a_mat, alg_b_mat, c_mat):
         'set dynamics for decoupled system'
@@ -55,6 +56,9 @@ class DecoupledIndexOne(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 1, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        self.x1_init_set_projector = P0
 
 
 class AutonomousDecoupledIndexOne(object):
@@ -70,6 +74,7 @@ class AutonomousDecoupledIndexOne(object):
         self.N1 = None    # ode part
         self.N2 = None    # algebraic constraint part
         self.reach_set_projector = None    # projector to compute the reachable set the original system
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
         self.out_matrix_c = None    # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
@@ -99,6 +104,9 @@ class AutonomousDecoupledIndexOne(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 1, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        self.x1_init_set_projector = P0
 
     def get_consistent_matrix(self):
         'construct consistent matrix to check consistency of initial condition'
@@ -160,6 +168,7 @@ class DecoupledIndexTwo(object):
         self.L3 = None    # algebraic constraints part 2
         self.out_matrix_c = None     # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg1_a_mat,
                      alg1_b_mat, alg2_a_mat, alg2_b_mat, alg2_c_mat, c_mat):
@@ -199,6 +208,11 @@ class DecoupledIndexTwo(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 2, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        Q1 = projectors_list[1]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        P1 = np.eye(Q1.shape[0]) - Q1
+        self.x1_init_set_projector = np.dot(P0, P1)
 
 
 class AutonomousDecoupledIndexTwo(object):
@@ -217,6 +231,7 @@ class AutonomousDecoupledIndexTwo(object):
         self.N3 = None    # algebraic constraints part 2
         self.L3 = None    # algebraic constraints part 2
         self.reach_set_projector = None    # projector to compute the reachable set the original system
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
         self.out_matrix_c = None     # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
@@ -253,6 +268,11 @@ class AutonomousDecoupledIndexTwo(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 2, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        Q1 = projector_list[1]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        P1 = np.eye(Q1.shape[0]) - Q1
+        self.x1_init_set_projector = np.dot(P0, P1)
 
     def get_consistent_matrix(self):
         'construct consistent matrix to check the consistency of the initial condition'
@@ -325,6 +345,7 @@ class DecoupledIndexThree(object):
         self.Z4 = None    # alg3 part
         self.out_matrix_c = None    # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
     def set_dynamics(self, ode_a_mat, ode_b_mat, alg1_a_mat, alg1_b_mat, alg2_a_mat,
                      alg2_b_mat, alg2_c_mat, alg3_a_mat, alg3_b_mat, alg3_c_mat, alg3_d_mat, c_mat):
@@ -375,6 +396,14 @@ class DecoupledIndexThree(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 3, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        Q1 = projectors_list[1]
+        Q2 = projectors_list[2]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        P1 = np.eye(Q1.shape[0]) - Q1
+        P2 = np.eye(Q2.shape[0]) - Q2
+
+        self.x1_init_set_projector = np.dot(P0, np.dot(P1, P2))
 
 
 class AutonomousDecoupledIndexThree(object):
@@ -397,6 +426,7 @@ class AutonomousDecoupledIndexThree(object):
         self.L4 = None    # alg3 part
         self.Z4 = None    # alg3 part
         self.reach_set_projector = None    # projector to compute the reachable set the original system
+        self.x1_init_set_projector = None    # projector to compute the initial set for ode subsystem from the original init set
 
         self.out_matrix_c = None    # output matrix
         self.projectors = []    # projectors in decoupling process, used to check consistent initial condition
@@ -449,8 +479,16 @@ class AutonomousDecoupledIndexThree(object):
         assert isinstance(projectors_list, list)
         assert len(projectors_list) == 3, 'error: invalid projector list'
         self.projectors = projectors_list
+        Q0 = projectors_list[0]
+        Q1 = projectors_list[1]
+        Q2 = projectors_list[2]
+        P0 = np.eye(Q0.shape[0]) - Q0
+        P1 = np.eye(Q1.shape[0]) - Q1
+        P2 = np.eye(Q2.shape[0]) - Q2
 
-        def get_consistent_matrix(self):
+        self.x1_init_set_projector = np.dot(P0, np.dot(P1, P2))
+
+    def get_consistent_matrix(self):
         'construct consistent matrix to check the consistency of the initial condition'
 
         assert self.projectors is not None, 'error: empty projectors list'
@@ -475,7 +513,7 @@ class AutonomousDecoupledIndexThree(object):
         Z4N2N1 = np.dot(self.Z4, np.dot(self.N2, self.N1))
         L3N2N1N1 = np.dot(self.L3, np.dot(self.N2, np.dot(self.N1, self.N1)))
         N3N1 = np.dot(self.N3, self.N1)
-        C3 = Q0 - np.dot(self.N4 + np.dot(self.L4, N3N1 + L3N2N1N1), P0P1P2)
+        C3 = Q0 - np.dot(self.N4 + np.dot(self.L4, N3N1 + L3N2N1N1) + Z4N2N1, P0P1P2)
         self.consistent_matrix = np.vstack((C1, C2, C3))
 
         return self.consistent_matrix

@@ -6,9 +6,7 @@ Dung Tran: Dec/2017
 import time
 import numpy as np
 from daev.engine.set import ReachSet
-from daev.engine.decoupling import AutonomousDecoupledIndexOne, AutonomousDecoupledIndexTwo, AutonomousDecoupledIndexThree
-from daev.engine.dae_automaton import DaeAutomation
-from daev.engine.projectors import null_space
+from daev.engine.decoupling import AutonomousDaeAutomation, DecouplingAutonomous
 from scipy.integrate import ode
 
 
@@ -97,24 +95,21 @@ class ReachSetAssembler(object):
         return reach_set_list, runtime
 
     @staticmethod
-    def reach_autonomous_dae(decoupled_sys, init_reachset, totime, num_steps, solver_name):
+    def reach_autonomous_dae(dae_sys, init_reachset, totime, num_steps, solver_name):
         'compute reachable set for decoupled dae'
 
         start = time.time()
-        assert isinstance(decoupled_sys, AutonomousDecoupledIndexOne) or \
-            isinstance(decoupled_sys, AutonomousDecoupledIndexTwo) or \
-            isinstance(decoupled_sys, AutonomousDecoupledIndexThree), 'error: invalid decoupled system'
-
+        assert isinstance(dae_sys, AutonomousDaeAutomation)
         assert isinstance(init_reachset, ReachSet)
+        decoupled_sys, status = DecouplingAutonomous().get_decoupled_system(dae_sys)
+        if status == 'error':
+            raise ValueError('error in decoupling')
 
         x_reach_set_list = []
         consistency = decoupled_sys.check_consistency(init_reachset)
 
         if consistency:
-
-            Q0 = decoupled_sys.projectors[0]
-            P0 = np.eye(Q0.shape[0], dtype=float) - Q0
-            x1_init_reachset = init_reachset.multiply(P0)
+            x1_init_reachset = init_reachset.multiply(decoupled_sys.x1_init_set_projector)
             x1_reach_set_list, _ = ReachSetAssembler().reach_autonomous_ode(decoupled_sys.N1, x1_init_reachset, totime, num_steps, solver_name)
             n = len(x1_init_reachset)
             for i in xrange(0, n):

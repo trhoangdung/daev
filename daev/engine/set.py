@@ -1,6 +1,6 @@
 '''
 This module implements set classes and methods
-Dung Tran: Dec/2017
+Dung Tran: Dec/2017    Update: Jan/2018
 '''
 
 import numpy as np

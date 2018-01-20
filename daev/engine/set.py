@@ -152,6 +152,50 @@ class ReachSet(object):
 
         return new_reach_set
 
+    def get_line_set(self, direction_matrix):
+        'obtain ranges of set on specific direction for plotting reach set'
+
+        assert isinstance(direction_matrix, np.ndarray)
+        assert self.S is not None, 'error: empty set'
+        assert self.predicate is not None or (self.alpha_min_vec is not None and self.alpha_max_vec is not None)
+        projected_set = self.multiply(direction_matrix)
+
+        m, k = projected_set.S.shape
+        line_set_list = []
+
+        for i in xrange(0, m):
+            line_set = LineSet()
+            c_vec = np.asarray(projected_set.S[i])
+            c_vec = c_vec.reshape(m)
+            alpha_bounds = []
+
+            # use alpha_min and alpha_max
+            if self.alpha_min_vec is not None and self.alpha_max_vec is not None:
+
+                for i in xrange(0, k):
+                    alpha_bounds.append((self.alpha_min_vec[i, 0], self.alpha_max_vec[i, 0]))
+
+                opt_res_min = linprog(c=c_vec, bounds=alpha_bounds)
+                opt_res_max = linprog(c=-c_vec, bounds=alpha_bounds)
+
+            elif self.predicate is not None:
+                opt_res_min = linprog(c=c_vec, A_ub=self.predicate.C, b_ub=self.predicate.d)
+                opt_res_max = linprog(c=-c_vec, A_ub=self.predicate.C, b_ub=self.predicate.d)
+
+            if opt_res_min.status == 0:
+                line_set.xmin = opt_res_min.fun
+            else:
+                print "\nminimization error: can not find min value"
+
+            if opt_res_max.status == 0:
+                line_set.xmax = -opt_res_max.fun
+            else:
+                print "\nmaximization error: can not find max value"
+
+            line_set_list.append(line_set)
+
+        return line_set_list
+
 
 class InitSet(object):
     'initial set of states and inputs'
@@ -237,3 +281,49 @@ class InitSet(object):
         init_reachset.set_alpha_min_max(opt_alpha_min, opt_alpha_max)
 
         return init_reachset
+
+
+class LineSet(object):
+    'Line Set'
+
+    def __init__(self):
+        self.xmin = None
+        self.xmax = None
+
+    def set_bounds(self, xmin, xmax):
+        'specify a segment'
+
+        assert isinstance(xmin, float)
+        assert isinstance(xmax, float)
+
+        assert xmin <= xmax, 'invalid set, xmin = {} is not <= than xmax = {}'.format(xmin, xmax)
+        self.xmin = xmin
+        self.xmax = xmax
+
+
+class RectangleSet2D(object):
+    'Rectangle Set'
+
+    def __init__(self):
+        self.xmin = None
+        self.xmax = None
+        self.ymin = None
+        self.ymax = None
+
+    def set_bounds(self, xmin, xmax, ymin, ymax):
+        'specify a rectangle'
+
+        assert isinstance(xmin, float)
+        assert isinstance(xmax, float)
+        assert isinstance(ymin, float)
+        assert isinstance(ymax, float)
+
+        assert xmin < xmax, 'invalid set, xmin = {} is not < than xmax = {}'.format(
+            xmin, xmax)
+        assert ymin < ymax, 'invalid set, ymin = {} is not < than ymax = {}'.format(
+            ymin, ymax)
+
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax

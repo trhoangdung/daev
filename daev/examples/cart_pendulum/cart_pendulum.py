@@ -113,6 +113,19 @@ def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
     return reachset, runtime
 
 
+def get_line_set(reachset, direction_matrix):
+    'get list of line set to plot the reachable set'
+
+    list_of_line_set_list = []
+    print "\ndirection_matrix = {}".format(direction_matrix)
+    for i in xrange(0, len(reachset)):
+        line_set = reachset[i].get_line_set(direction_matrix)
+        list_of_line_set_list.append(line_set)
+        print "\nline_set_list[{}] = {}".format(i, line_set)
+
+    return list_of_line_set_list
+
+
 def main():
     'main function'
 
@@ -128,6 +141,8 @@ def main():
     solver_names = ['vode', 'zvode', 'Isoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
     reachset, runtime = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
+
+    list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
 
 if __name__ == '__main__':
 

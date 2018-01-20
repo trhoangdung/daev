@@ -6,7 +6,7 @@ Dung Tran Nov-2017
 
 import math
 import numpy as np
-from scipy.sparse import lil_matrix, csr_matrix, eye
+from scipy.sparse import lil_matrix, csc_matrix, csr_matrix, eye
 from scipy.sparse import hstack, vstack
 
 
@@ -27,10 +27,12 @@ class index_1_daes(object):
         assert isinstance(C, float) and C > 0
         assert isinstance(R, float) and R > 0
 
-        self.matrix_e = np.array([[L, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        self.matrix_a = np.array([[0, 1, 0, 0], [1 / C, 0, 0, 0], [-R, 0, 0, 1], [0, 1, 1, 1]])
-        self.matrix_b = np.array([[0], [0], [0], [-1]])
-        self.matrix_c = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
+        self.matrix_e = csc_matrix(
+            np.array([[L, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]))
+        self.matrix_a = csc_matrix(
+            np.array([[0, 1, 0, 0], [1 / C, 0, 0, 0], [-R, 0, 0, 1], [0, 1, 1, 1]]))
+        self.matrix_b = csc_matrix(np.array([[0], [0], [0], [-1]]))
+        self.matrix_c = csc_matrix(np.array([[1, 0, 0, 0], [0, 0, 1, 0]]))
 
         return self.matrix_e, self.matrix_a, self.matrix_b, self.matrix_c
 
@@ -53,15 +55,15 @@ class index_2_daes(object):
         isinstance(J2, float)
         assert (J1 > 0) and (J2 > 0)
 
-        self.E = np.array([[J1, 0, 0, 0], [0, J2, 0, 0],
-                           [0, 0, 0, 0], [0, 0, 0, 0]])
+        self.E = csc_matrix(np.array([[J1, 0, 0, 0], [0, J2, 0, 0],
+                                      [0, 0, 0, 0], [0, 0, 0, 0]]))
 
-        self.A = np.array([[0, 0, 1, 0], [0, 0, 0, 1],
-                           [0, 0, -1, -1], [-1, 1, 0, 0]])
+        self.A = csc_matrix(np.array([[0, 0, 1, 0], [0, 0, 0, 1],
+                                      [0, 0, -1, -1], [-1, 1, 0, 0]]))
 
-        self.B = np.array([[1, 0], [0, 1], [0, 0], [0, 0]])
+        self.B = csc_matrix(np.array([[1, 0], [0, 1], [0, 0], [0, 0]]))
 
-        self.C = np.transpose(self.B)
+        self.C = csc_matrix(np.transpose(self.B.todense()))
 
         return self.E, self.A, self.B, self.C
 
@@ -75,10 +77,10 @@ class index_2_daes(object):
         isinstance(L, float)
         assert (R > 0) and (L > 0)
 
-        self.E = np.array([[0, 0, 0], [0, 0, 0], [0, 0, L]])
-        self.A = np.array([[-R, R, 0], [R, -R, -1], [0, 1, 0]])
-        self.B = np.array([[1], [0], [0]])
-        self.C = np.array([1, 1, 1])
+        self.E = csc_matrix(np.array([[0, 0, 0], [0, 0, 0], [0, 0, L]]))
+        self.A = csc_matrix(np.array([[-R, R, 0], [R, -R, -1], [0, 1, 0]]))
+        self.B = csc_matrix(np.array([[1], [0], [0]]))
+        self.C = csc_matrix(np.array([1, 1, 1]))
 
         return self.E, self.A, self.B, self.C
 
@@ -303,17 +305,19 @@ class index_3_daes(object):
         assert (m1 > 0) and (m2 > 0) and (L > 0)
         g = 9.81
 
-        self.E = np.diag((1, 1, 1, m1, m2, m2, 0))
-        self.A = np.array([[0, 0, 0, 1, 0, 0, 0],
-                           [0, 0, 0, 0, 1, 0, 0],
-                           [0, 0, 0, 0, 0, 1, 0],
-                           [-m2 * g / L, m2 * g / L, 0, 0, 0, 0, 0],
-                           [m2 * g / L, (-m2) * g / L, 0, 0, 0, 0, 0],
-                           [0, 0, m2 * g / L, 0, 0, 0, 2 * L],
-                           [0, 0, -2 * L, 0, 0, 0, 0]])
+        self.E = csc_matrix(np.diag((1, 1, 1, m1, m2, m2, 0)))
+        self.A = csc_matrix(np.array([[0, 0, 0, 1, 0, 0, 0],
+                                      [0, 0, 0, 0, 1, 0, 0],
+                                      [0, 0, 0, 0, 0, 1, 0],
+                                      [-m2 * g / L, m2 * g / L, 0, 0, 0, 0, 0],
+                                      [m2 * g / L, (-m2) * g / L,
+                                       0, 0, 0, 0, 0],
+                                      [0, 0, m2 * g / L, 0, 0, 0, 2 * L],
+                                      [0, 0, -2 * L, 0, 0, 0, 0]]))
 
-        self.B = np.array([[0], [0], [0], [1], [0], [0], [0]])
-        self.C = np.array([[0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0]])
+        self.B = csc_matrix(np.array([[0], [0], [0], [1], [0], [0], [0]]))
+        self.C = csc_matrix(
+            np.array([[0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0]]))
 
         return self.E, self.A, self.B, self.C
 
@@ -333,28 +337,29 @@ class index_3_daes(object):
         isinstance(k, float)
         assert (J > 0) and (L > 0) and (R1 > 0) and (R2 > 0) and (k > 0)
 
-        self.E = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 1, 0, 0, 0, 0, 0],
-                           [0, 0, J, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, L, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0]])
+        self.E = csc_matrix(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+                                      [0, 0, J, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, L, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 0, 0, 0]]))
 
-        self.A = np.array([[0, 0, 0, -1, 0, 0, 0, 0, 0],
-                           [0, 0, 1, 0, 0, 0, 0, 0, 0],
-                           [1, 1, 0, 0, 0, 0, 0, 0, 0],
-                           [0, -1, 0, 0, k, 0, 0, 0, 0],
-                           [0, 0, k, 0, 0, -1, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 1, 0, 0],
-                           [0, 0, 0, 0, R1, 0, 0, -1, 0],
-                           [0, 0, 0, 0, R2, 0, 0, 0, -1],
-                           [0, 0, 0, 0, 0, -1, 1, 1, 1]])
+        self.A = csc_matrix(np.array([[0, 0, 0, -1, 0, 0, 0, 0, 0],
+                                      [0, 0, 1, 0, 0, 0, 0, 0, 0],
+                                      [1, 1, 0, 0, 0, 0, 0, 0, 0],
+                                      [0, -1, 0, 0, k, 0, 0, 0, 0],
+                                      [0, 0, k, 0, 0, -1, 0, 0, 0],
+                                      [0, 0, 0, 0, 0, 0, 1, 0, 0],
+                                      [0, 0, 0, 0, R1, 0, 0, -1, 0],
+                                      [0, 0, 0, 0, R2, 0, 0, 0, -1],
+                                      [0, 0, 0, 0, 0, -1, 1, 1, 1]]))
 
-        self.B = np.array([[1], [0], [0], [0], [0], [0], [0], [0], [0]])
-        self.C = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+        self.B = csc_matrix(
+            np.array([[1], [0], [0], [0], [0], [0], [0], [0], [0]]))
+        self.C = csc_matrix(np.array([0, 0, 0, 0, 0, 0, 0, 0, 1]))
 
         return self.E, self.A, self.B, self.C
 
@@ -489,7 +494,7 @@ if __name__ == '__main__':
     # index 3 benchmarks
     bm = index_3_daes()
 
-    # Car Pendulum benchmark
+    # Cart Pendulum benchmark
     E, A, B, C = bm.car_pendulum(2, 1, 1)
     print "\n########################################################"
     print "\nCAR PENDULUM:"

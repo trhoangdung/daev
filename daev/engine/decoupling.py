@@ -112,7 +112,7 @@ class AutonomousDecoupledIndexOne(object):
         'construct consistent matrix to check consistency of initial condition'
 
         assert self.projectors != [], 'error: empty set of projectors'
-        assert self.ode_matrix_a is not None, 'error: empty decoupled system'
+        assert self.N1 is not None, 'error: empty decoupled system'
 
         Q0 = self.projectors[0]
         P0 = np.eye(Q0.shape[0]) - Q0
@@ -142,8 +142,7 @@ class AutonomousDecoupledIndexOne(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
-        else:
-            basic_matrix, _ = null_space(self.consistent_matrix)
+        basic_matrix, _ = null_space(self.consistent_matrix)
 
         return basic_matrix
 
@@ -278,7 +277,7 @@ class AutonomousDecoupledIndexTwo(object):
         'construct consistent matrix to check the consistency of the initial condition'
 
         assert self.projectors is not None, 'error: empty projectors list'
-        assert self.ode_matrix_a is not None, 'error: empty decoupled system'
+        assert self.N1 is not None, 'error: empty decoupled system'
 
         Q0 = self.projectors[0]
         P0 = np.eye(Q0.shape[0]) - Q0
@@ -314,8 +313,7 @@ class AutonomousDecoupledIndexTwo(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
-        else:
-            basic_matrix, _ = null_space(self.consistent_matrix)
+        basic_matrix, _ = null_space(self.consistent_matrix)
 
         return basic_matrix
 
@@ -492,7 +490,7 @@ class AutonomousDecoupledIndexThree(object):
         'construct consistent matrix to check the consistency of the initial condition'
 
         assert self.projectors is not None, 'error: empty projectors list'
-        assert self.ode_matrix_a is not None, 'error: empty decoupled system'
+        assert self.N1 is not None, 'error: empty decoupled system'
 
         Q0 = self.projectors[0]
         P0 = np.eye(Q0.shape[0]) - Q0
@@ -539,8 +537,7 @@ class AutonomousDecoupledIndexThree(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
-        else:
-            basic_matrix, _ = null_space(self.consistent_matrix)
+        basic_matrix, _ = null_space(self.consistent_matrix)
 
         return basic_matrix
 

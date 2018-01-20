@@ -178,7 +178,7 @@ def test_generate_consistent_init_condition_index_3():
 
 if __name__ == '__main__':
     # test_ode_sim()
-    # test_reach_autonomous_ode()
+    test_reach_autonomous_ode()
     # test_reach_autonomous_dae_index_1()
     # test_generate_consistent_init_condition_index_2()
-    test_generate_consistent_init_condition_index_3()
+    # test_generate_consistent_init_condition_index_3()

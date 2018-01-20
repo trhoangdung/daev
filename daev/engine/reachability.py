@@ -74,7 +74,9 @@ class ReachSetAssembler(object):
         sol_list = []
 
         for j in xrange(0, k):
-            init_vec = matrix_S[:, j]
+            init_vec = np.asarray(matrix_S[:, j])
+            init_vec = init_vec.reshape(n,)
+
             sol, _ = ReachSetAssembler().ode_sim(
                 matrix_a, init_vec, totime, num_steps, solver_name)
             sol_list.append(sol)
@@ -87,7 +89,13 @@ class ReachSetAssembler(object):
                 sol = sol_list[j]
                 s_mat[:, j] = np.transpose(sol[i])
 
-            reach_set.set_params(s_mat, alpha_min, alpha_max)
+            reach_set.set_basic_matrix(s_mat)
+            if alpha_min is not None and alpha_max is not None:
+                reach_set.set_alpha_min_max(alpha_min, alpha_max)
+
+            if init_reachset.predicate is not None:
+                reach_set.set_predicate(init_reachset.predicate)
+
             reach_set_list.append(reach_set)
 
         runtime = time.time() - start
@@ -110,8 +118,8 @@ class ReachSetAssembler(object):
 
         if consistency:
             x1_init_reachset = init_reachset.multiply(decoupled_sys.x1_init_set_projector)
-            x1_reach_set_list, _ = ReachSetAssembler().reach_autonomous_ode(decoupled_sys.N1, x1_init_reachset, totime, num_steps, solver_name)
-            n = len(x1_init_reachset)
+            x1_reach_set_list, _ = ReachSetAssembler.reach_autonomous_ode(decoupled_sys.N1, x1_init_reachset, totime, num_steps, solver_name)
+            n = len(x1_reach_set_list)
             for i in xrange(0, n):
                 x_reach_set_list.append(x1_reach_set_list[i].multiply(decoupled_sys.reach_set_projector))
 

@@ -230,7 +230,10 @@ class InitSet(object):
                 opt_alpha_max[i] = opt_alpha_max_list[i - 1]
                 S0[:, i] = opt_vi_list[i - 1].reshape(n)
 
+        print "\nS0 = {}".format(S0)
+
         init_reachset = ReachSet()
-        init_reachset.set_params(S0, opt_alpha_min, opt_alpha_max)
+        init_reachset.set_basic_matrix(S0)
+        init_reachset.set_alpha_min_max(opt_alpha_min, opt_alpha_max)
 
         return init_reachset

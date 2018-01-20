@@ -128,12 +128,11 @@ class AutonomousDecoupledIndexOne(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
+        if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-4:
+            print "\nError: initial condition is not consistent"
+            consistency = False
         else:
-            if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-6:
-                print "\nError: initial condition is not consistent"
-                consistency = True
-            else:
-                consistency = False
+            consistency = True
 
         return consistency
 
@@ -299,12 +298,11 @@ class AutonomousDecoupledIndexTwo(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
+        if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-4:
+            print "\nError: initial condition is not consistent"
+            consistency = False
         else:
-            if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-6:
-                print "\nError: initial condition is not consistent"
-                consistency = True
-            else:
-                consistency = False
+            consistency = True
 
         return consistency
 
@@ -523,12 +521,13 @@ class AutonomousDecoupledIndexThree(object):
 
         if self.consistent_matrix is None:
             self.get_consistent_matrix()
+
+        if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-4:
+            print "\nError: initial condition is not consistent"
+            print "\nnorm of consistency = {}".format(np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)))
+            consistency = False
         else:
-            if np.linalg.norm(np.dot(self.consistent_matrix, init_set.S)) > 1e-6:
-                print "\nError: initial condition is not consistent"
-                consistency = True
-            else:
-                consistency = False
+            consistency = True
 
         return consistency
 

@@ -5,22 +5,14 @@ Dung Tran: Nov/2017
 
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
-from engine.set import RectangleSet2D, RectangleSet3D, LineSet
+from daev.engine.set import LineSet, RectangleSet2D, RectangleSet3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.axes3d import Axes3D
-from daev.engine.verifier import VerificationResult
 import numpy as np
 
 
 class Plot(object):
     'implements methods for ploting different kind of set'
-
-
-    @staticmethod
-    def plot_reach_set_2D(ax, veri_res, edgecolor):
-        'plot the reachable set of the interested output individually y_i = C[i, :]x'
-
-        # it
 
     @staticmethod
     def plot_boxes(ax, rectangle_set_list, facecolor, edgecolor):

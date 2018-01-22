@@ -267,7 +267,7 @@ class AutonomousDecoupledIndexTwo(object):
         assert len(projectors_list) == 2, 'error: invalid projector list'
         self.projectors = projectors_list
         Q0 = projectors_list[0]
-        Q1 = projector_list[1]
+        Q1 = projectors_list[1]
         P0 = np.eye(Q0.shape[0]) - Q0
         P1 = np.eye(Q1.shape[0]) - Q1
         self.x1_init_set_projector = np.dot(P0, P1)

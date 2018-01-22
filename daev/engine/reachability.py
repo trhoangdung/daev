@@ -82,7 +82,7 @@ class ReachSetAssembler(object):
             sol_list.append(sol)
 
         reach_set_list = []
-        for i in xrange(0, num_steps):
+        for i in xrange(0, num_steps + 1):
             reach_set = ReachSet()
             s_mat = np.empty((n, k))
             for j in xrange(0, k):

@@ -48,7 +48,9 @@ class DaeAutomation(object):
         'convert dae to an autonomous dae'
 
         # if the input u satisfy: u' = Gu, Ex' = Ax + Bu, y = Cx can be converted into
-        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, y = [C 0]* [x u]^T
+        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, y = [C 0; 0 I]* [x u]^T
+
+        # the last m ouputs is to observe the user-defined inputs
 
         # if G == 0, we have an affine DAE
 
@@ -69,7 +71,8 @@ class DaeAutomation(object):
 
         nC = self.matrix_c.shape[0]
         Zm3 = csc_matrix((nC, m), dtype=float)
-        new_C = hstack((self.matrix_c, Zm3), format='csc')
+        new_C_1 = hstack((self.matrix_c, Zm3), format='csc')
+        new_C = vstack((new_C_1, E2), format='csc')
         autonomous_dae = AutonomousDaeAutomation()
         autonomous_dae.set_dynamics(new_E, new_A, new_C)
 

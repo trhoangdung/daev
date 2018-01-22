@@ -166,7 +166,7 @@ class ReachSet(object):
         for i in xrange(0, m):
             line_set = LineSet()
             c_vec = np.asarray(projected_set.S[i])
-            c_vec = c_vec.reshape(m)
+            c_vec = c_vec.reshape(k)
             alpha_bounds = []
 
             # use alpha_min and alpha_max
@@ -318,12 +318,45 @@ class RectangleSet2D(object):
         assert isinstance(ymin, float)
         assert isinstance(ymax, float)
 
-        assert xmin < xmax, 'invalid set, xmin = {} is not < than xmax = {}'.format(
+        assert xmin <= xmax, 'invalid set, xmin = {} is not <= than xmax = {}'.format(
             xmin, xmax)
-        assert ymin < ymax, 'invalid set, ymin = {} is not < than ymax = {}'.format(
+        assert ymin <= ymax, 'invalid set, ymin = {} is not <= than ymax = {}'.format(
             ymin, ymax)
 
         self.xmin = xmin
         self.xmax = xmax
         self.ymin = ymin
         self.ymax = ymax
+
+
+class RectangleSet3D(object):
+    'Hyper Rectangle Set'
+
+    def __init__(self):
+        self.xmin = None
+        self.xmax = None
+        self.ymin = None
+        self.ymax = None
+        self.zmin = None
+        self.zmax = None
+
+    def set_bounds(self, xmin, xmax, ymin, ymax, zmin, zmax):
+        'specify a rectangle'
+
+        assert isinstance(xmin, float)
+        assert isinstance(xmax, float)
+        assert isinstance(ymin, float)
+        assert isinstance(ymax, float)
+        assert isinstance(zmin, float)
+        assert isinstance(zmax, float)
+
+        assert xmin <= xmax, 'invalid set, xmin = {} is not <= than xmax = {}'.format(xmin, xmax)
+        assert ymin <= ymax, 'invalid set, ymin = {} is not <= than ymax = {}'.format(ymin, ymax)
+        assert zmin <= zmax, 'invalid set, zmin = {} is not <= than zmax = {}'.format(zmin, zmax)
+
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
+        self.zmin = zmin
+        self.zmax = zmax

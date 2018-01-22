@@ -1,26 +1,28 @@
 '''
-Cart-pendulum example run file
+Two-interconnected roatating masses example run file
 Dung Tran: Jan/2018
 '''
 
-from daev.daes import index_3_daes
+from daev.daes import index_2_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
-from daev.engine.set import ReachSet
+from daev.engine.set import LinearPredicate, ReachSet, RectangleSet2D, RectangleSet3D
 from daev.engine.reachability import ReachSetAssembler
+from daev.engine.verifier import Verifier
 from daev.engine.plot import Plot
 from scipy.sparse import csc_matrix
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
-def get_cart_pendulum():
-    'get cart-pendulum matrices'
+def get_benchmark():
+    'get benchmark matrices'
 
-    # Cart Pendulum benchmark
-    E, A, B, C = index_3_daes().car_pendulum(2, 1, 1)
+    # TWO INTERCONNECTED ROTATING MASSES
+    E, A, B, C = index_2_daes().two_interconnected_rotating_masses(1.0, 2.0)
     print "\n########################################################"
-    print "\nCAR PENDULUM:"
+    print "\nTWO INTERCONNECTED ROTATING MASSES:"
     print "\ndimensions: {}".format(E.shape[0])
     print "\nE = {} \nA ={} \nB={} \nC={}".format(E.todense(), A.todense(), B.todense(), C.todense())
 
@@ -28,7 +30,7 @@ def get_cart_pendulum():
 
 
 def construct_dae_automaton(E, A, B, C):
-    'create dae automaton for car pedulum benchmark'
+    'create dae automaton for the benchmark'
 
     dae_sys = DaeAutomation()
     dae_sys.set_dynamics(E, A, B, C)
@@ -36,9 +38,10 @@ def construct_dae_automaton(E, A, B, C):
 
 
 def convert_to_auto_dae(dae_sys):
-    'convert cart pendulum dae system to autonomous dae automaton'
+    'convert dae system to autonomous dae automaton'
 
-    u_mat = np.array([-2])    # user-defined input
+    u_mat = np.array([[0, 1], [-1, 0]])    # user-defined input
+    # u_mat = np.array([[-1, 0], [0, -2]])    # user-defined input
     dae_auto = dae_sys.convert_to_autonomous_dae(csc_matrix(u_mat))
     print "\ndae_auto matrix_e = {}".format(dae_auto.matrix_e.todense())
     print "\nrank of new E = {}".format(np.linalg.matrix_rank(dae_auto.matrix_e.todense()))
@@ -49,7 +52,7 @@ def convert_to_auto_dae(dae_sys):
 
 
 def decouple_auto_dae(dae_auto):
-    'decoupling autonomous car-pendulum dae system'
+    'decoupling autonomous dae system'
 
     decoupled_dae, status = DecouplingAutonomous().get_decoupled_system(dae_auto)
 
@@ -62,12 +65,6 @@ def decouple_auto_dae(dae_auto):
     print "\nnorm of N3 = {}".format(np.linalg.norm(decoupled_dae.N3))
     print "\ndecoupled dae_auto: L3 = {}".format(decoupled_dae.L3)
     print "\nnorm of L3 = {}".format(np.linalg.norm(decoupled_dae.L3))
-    print "\ndecoupled dae_auto: N4 = {}".format(decoupled_dae.N4)
-    print "\nnorm of N4 = {}".format(np.linalg.norm(decoupled_dae.N4))
-    print "\ndecoupled dae_auto: L4 = {}".format(decoupled_dae.L4)
-    print "\nnorm of L4 = {}".format(np.linalg.norm(decoupled_dae.L4))
-    print "\ndecoupled dae_auto: Z4 = {}".format(decoupled_dae.Z4)
-    print "\nnorm of Z4 = {}".format(np.linalg.norm(decoupled_dae.Z4))
 
     return decoupled_dae
 
@@ -91,7 +88,7 @@ def construct_init_set(basic_matrix):
     print "\ninit_set_basic_matrix shape = {}".format(init_set_basic_matrix.shape)
     # alpha_min = np.array([[0.1]])
     # alpha_max = np.array([[0.2]])
-    alpha_min = np.array([[0.1], [0.8]])
+    alpha_min = np.array([[0.1], [1.0]])
     alpha_max = np.array([[0.2], [1.2]])
 
 
@@ -104,6 +101,19 @@ def construct_init_set(basic_matrix):
     init_set.set_alpha_min_max(alpha_min, alpha_max)
 
     return init_set
+
+
+def construct_unsafe_set():
+    'construct unsafe set'
+
+    # unsafe set: M2 <= -1.0
+    C = np.array([[0, 0, 1, 0, 0, 0]])
+    d = np.array([[-0.7]])
+    print "\nunsafe matrix C = {}".format(C)
+    print "\nunsafe vector d = {}".format(d)
+    unsafe_set = LinearPredicate(C, d)
+
+    return unsafe_set
 
 
 def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
@@ -133,13 +143,17 @@ def get_line_set(reachset, direction_matrix):
 
 
 def plot_vline_set(list_of_line_set_list, totime, num_steps):
-    'plot reach set of each output'
+    'plot reach set of individual outputs'
 
     n = len(list_of_line_set_list)    # number of line_set list
     m = len(list_of_line_set_list[0])    # number of outputs
     time_list = np.linspace(0.0, totime, num_steps + 1)
-    print "\ntype of time_list = {}".format(type(time_list))
     print "\ntime_list = {}".format(time_list)
+
+    colors = ['b', 'g', 'maroon', 'c']
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+    pl1 = Plot()
 
     for i in xrange(0, m):
         line_set_output_i = []
@@ -148,26 +162,101 @@ def plot_vline_set(list_of_line_set_list, totime, num_steps):
             line_set_output_i.append(line_set_list[i])
             print "\noutput_{} at step {}: min = {}, max = {}".format(i, j, line_set_list[i].xmin, line_set_list[i].xmax)
 
-        fig1 = plt.figure()
-        ax1 = fig1.add_subplot(111)
-        pl1 = Plot()
-        ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors='b', linestyles='solid')
-        ax1.legend([r'$y_{}(t)$'.format(i)])
-        ax1.set_ylim(-0.2, 2.0)
-        ax1.set_xlim(0, totime)
-        plt.xticks(fontsize=20)
-        plt.yticks(fontsize=20)
-        plt.xlabel('$t$', fontsize=20)
-        plt.ylabel(r'$y_{}$'.format(i), fontsize=20)
-        fig1.suptitle('Simulation-equivalent reachable set of $y_{}$'.format(i), fontsize=25)
-        fig1.savefig('dreachset_y_{}.pdf'.format(i))
-        plt.show()
+        ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
+
+    ax1.legend([r'$z_{1}(t)$', r'$M_{2}(t)$', r'$u_{1}(t) = M_{1}$', r'$u_2(t) = M_{4}$'])
+    ax1.set_ylim(-2.0, 2.0)
+    ax1.set_xlim(0, totime)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlabel('$t$', fontsize=20)
+    plt.ylabel(r'$z_{1}, M_{2}, u_{1}, u_{2}$', fontsize=20)
+    fig1.suptitle('Individual Reachable set of $z_{1}$ and $M_{2}$', fontsize=25)
+    fig1.savefig('individual_reachset_z1_M2_u1_u2.pdf')
+    plt.show()
+
+
+def plot_boxes(list_of_line_set_list):
+    'plot reach set of two outputs as boxes'
+
+    n = len(list_of_line_set_list)
+
+    box_list = []
+    for j in xrange(0, n):
+        line_set_list = list_of_line_set_list[j]
+        box_2d = RectangleSet2D()
+        box_2d.set_bounds(line_set_list[0].xmin, line_set_list[0].xmax, line_set_list[1].xmin, line_set_list[1].xmax)
+        box_list.append(box_2d)
+
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+    pl1 = Plot()
+    ax1 = pl1.plot_boxes(ax1, box_list, facecolor='b', edgecolor='b')
+    ax1.set_ylim(-1.5, 1.5)
+    ax1.set_xlim(-1.5, 1.5)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlabel('$M_2$', fontsize=20)
+    plt.ylabel(r'$z_1$', fontsize=20)
+    blue_patch = mpatches.Patch(color='b', label='$(z_{1}, M_{2})$')
+    plt.legend(handles=[blue_patch])
+    fig1.suptitle('Reachable set $(z_1, M_2)$', fontsize=25)
+    plt.show()
+    fig1.savefig('reachset_z1_M2.pdf')
+
+
+def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
+    'plot boxes vs time'
+
+    n = len(list_of_line_set_list)
+    time_list = np.linspace(0.0, totime, num_steps + 1)
+
+    box_list = []
+    for j in xrange(0, n):
+        line_set_list = list_of_line_set_list[j]
+        box_3d = RectangleSet3D()
+        box_3d.set_bounds(line_set_list[0].xmin, line_set_list[0].xmax, line_set_list[1].xmin, line_set_list[1].xmax, time_list[j], time_list[j])
+        box_list.append(box_3d)
+
+    fig2 = plt.figure()
+    ax2 = fig2.add_subplot(111, projection='3d')
+    pl2 = Plot()
+    ax2 = pl2.plot_3d_boxes(ax2, box_list, facecolor='b', linewidth=0.5, edgecolor='b')
+    ax2.set_xlim(-1.0, 1.0)
+    ax2.set_ylim(-1.0, 1.0)
+    ax2.set_zlim(0, 10.5)
+    ax2.tick_params(axis='z', labelsize=20)
+    ax2.tick_params(axis='x', labelsize=20)
+    ax2.tick_params(axis='y', labelsize=20)
+    ax2.set_xlabel('$z_1$', fontsize=20)
+    ax2.set_ylabel('$M_2$', fontsize=20)
+    ax2.set_zlabel(r'$t$', fontsize=20)
+    fig2.suptitle('Reachable Set $(z_1, M_2)$ vs. time $t$', fontsize=25)
+    fig2.savefig('reachset_vs_time.pdf')
+    plt.show()
+
+
+def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name):
+    'verify the safety of the system'
+
+    veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
+    print "\nsafety status = {}".format(veri_result.status)
+    print "\nruntime = {}".format(veri_result.runtime)
+
+    return veri_result
+
+
+def plot_unsafe_trace(veri_result):
+    'plot unsafe trace'
+
+
+
 
 
 def main():
     'main function'
 
-    E, A, B, C = get_cart_pendulum()
+    E, A, B, C = get_benchmark()
     dae_sys = construct_dae_automaton(E, A, B, C)
     dae_auto = convert_to_auto_dae(dae_sys)
     decoupled_dae = decouple_auto_dae(dae_auto)
@@ -179,10 +268,14 @@ def main():
     solver_names = ['vode', 'zvode', 'Isoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
     reachset, runtime = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
-
     list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
+    # plot_vline_set(list_of_line_set_list, totime, num_steps)
+    # plot_boxes(list_of_line_set_list)
+    plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
 
-    plot_vline_set(list_of_line_set_list, totime, num_steps)
+    unsafe_set = construct_unsafe_set()
+    veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
+
 
 if __name__ == '__main__':
 

@@ -48,7 +48,7 @@ class DaeAutomation(object):
         'convert dae to an autonomous dae'
 
         # if the input u satisfy: u' = Gu, Ex' = Ax + Bu, y = Cx can be converted into
-        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, y = [C 0; 0 I]* [x u]^T
+        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, new_y = [C 0; 0 I]* [x u]^T, we observe the input u
 
         # the last m ouputs is to observe the user-defined inputs
 

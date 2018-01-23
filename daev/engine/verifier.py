@@ -35,22 +35,23 @@ class Verifier(object):
     def check_safety(self, dae_sys, init_set, unsafe_set, totime, num_steps, solver_name):
         'check safety of a dae system'
 
-        start = time.time()
         assert isinstance(dae_sys, AutonomousDaeAutomation)
         assert isinstance(unsafe_set, LinearPredicate)
-        reach_set, _ = ReachSetAssembler().reach_autonomous_dae(dae_sys, init_set, totime, num_steps, solver_name)
+        reach_set, decoupling_time, reachset_computation_time = ReachSetAssembler().reach_autonomous_dae(dae_sys, init_set, totime, num_steps, solver_name)
+        start = time.time()
         time_list = np.linspace(0.0, totime, num_steps + 1)
         n = len(reach_set)
         status = 'safe'
         unsafe_trace = []
         unsafe_state_trace = []
+        unsafe_point = []
         for i in xrange(0, n):
             rs = reach_set[i]
             status, fes_alpha, _, _ = rs.check_safety(unsafe_set)
             if status == 'unsafe':
                 constr_mat = np.dot(unsafe_set.C, rs.S)
                 unsafe_vec = np.dot(constr_mat, fes_alpha)
-                unsafe_point = (unsafe_vec, time_list[i])
+                unsafe_point = (unsafe_vec, time_list[i], fes_alpha)
                 break
         if status == 'unsafe':
             # compute unsafe trace
@@ -62,7 +63,7 @@ class Verifier(object):
                 unsafe_trace.append(unsafe_vec)
                 unsafe_state_trace.append(unsafe_state)
 
-        runtime = time.time() - start
+        checking_safety_time = time.time() - start
 
         ver_res = VerificationResult()
         ver_res.totime = totime
@@ -72,7 +73,7 @@ class Verifier(object):
         ver_res.unsafe_point = unsafe_point
         ver_res.unsafe_trace = unsafe_trace
         ver_res.unsafe_state_trace = unsafe_state_trace
-        ver_res.runtime = runtime
+        ver_res.runtime = [('decoupling_time', decoupling_time), ('reachset_computation_time', reachset_computation_time), ('checking_safety_time', checking_safety_time)]
         ver_res.reach_set = reach_set
         ver_res.unsafe_set = unsafe_set
         self.verification_result = ver_res

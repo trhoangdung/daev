@@ -1,0 +1,16 @@
+
+REACHABLE SET COMPUTATION TIME VERSUS NUMBER OF BASIC VECTORS OF THE BASIC MATRIX
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 2', 1.9013469219207764)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 4', 3.4101648330688477)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 6', 5.007476806640625)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 8', 6.715579986572266)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 10', 8.297565937042236)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 12', 9.912980079650879)
+
+('solver=dopri5, dimension=321, num_steps=1000, totime=0.4, num_basic_vectors = 14', 11.43996000289917)

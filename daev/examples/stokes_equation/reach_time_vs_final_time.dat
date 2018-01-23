@@ -1,0 +1,10 @@
+
+    REACHABLE SET COMPUTATION TIME VERSUS FINAL TIME
+
+('solver=dopri5, dimension=1009, num_steps=1000, totime=0.4', 23.76803994178772)
+
+('solver=dopri5, dimension=1009, num_steps=1000, totime=0.6', 24.546828985214233)
+
+('solver=dopri5, dimension=1009, num_steps=1000, totime=0.8', 24.680410861968994)
+
+('solver=dopri5, dimension=1009, num_steps=1000, totime=1.0', 24.700660943984985)

@@ -94,7 +94,6 @@ def construct_init_set(basic_matrix):
     alpha_min = np.array([[0.1], [0.8]])
     alpha_max = np.array([[0.2], [1.2]])
 
-
     print "\ninitial set basic matrix: \n{}".format(init_set_basic_matrix)
     print "\ninitial set alpha min: \n{}".format(alpha_min)
     print "\ninitial set alpha max: \n{}".format(alpha_max)
@@ -109,14 +108,15 @@ def construct_init_set(basic_matrix):
 def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
     'compute reachable set'
 
-    reachset, runtime = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
+    reachset, decoupling_time, reachset_computation_time = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
     print "\nlength of reachset = {}".format(len(reachset))
-    print "\nruntime of computing reachable set = {}".format(runtime)
+    print "\ndecoupling time = {}".format(decoupling_time)
+    print "\nreachable set computation time = {}".format(reachset_computation_time)
 
     for i in xrange(0, len(reachset)):
         print "\nreachset_basic_matrix[{}] = \n{}".format(i, reachset[i].S)
 
-    return reachset, runtime
+    return reachset
 
 
 def get_line_set(reachset, direction_matrix):
@@ -176,9 +176,9 @@ def main():
 
     totime = 10.0
     num_steps = 100
-    solver_names = ['vode', 'zvode', 'Isoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
+    solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
-    reachset, runtime = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
+    reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
 
     list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
 

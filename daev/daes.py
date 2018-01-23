@@ -240,7 +240,7 @@ class index_2_daes(object):
         E2 = hstack([csr_matrix.transpose(zero_mat),
                      csr_matrix((n * n, n * n), dtype=float)])
         E = vstack([E1, E2])
-        self.E = E.tocsr()
+        self.E = E.tocsc()
 
         V1 = hstack([matrix_V_x, csr_matrix((num_var, num_var), dtype=float)])
         V2 = hstack([csr_matrix((num_var, num_var), dtype=float), matrix_V_y])
@@ -250,14 +250,14 @@ class index_2_daes(object):
         A2 = hstack([csr_matrix.transpose(matrix_P.tocsr()),
                      csr_matrix((n * n, n * n), dtype=float)])
         A = vstack([A1, A2])
-        self.A = A.tocsr()
+        self.A = A.tocsc()
 
         zero_vec = csr_matrix((n * n, 1), dtype=float)
         B = vstack([B_x, B_y, zero_vec])
-        self.B = B.tocsr()
+        self.B = B.tocsc()
 
         # we are interested in the velocity v_x and v_y of the middle point of
-        # the middle cell
+        # the middle cell, we use the average value between two points
 
         centre = int(math.ceil((n - 1) / 2))
         vx1_index = centre * n + centre
@@ -276,7 +276,7 @@ class index_2_daes(object):
         C1 = hstack([Cx, zero_mat2, zero_mat3])
         C2 = hstack([zero_mat2, Cy, zero_mat3])
         C = vstack([C1, C2])
-        self.C = C.tocsr()
+        self.C = C.tocsc()
 
         return self.E, self.A, self.B, self.C
 

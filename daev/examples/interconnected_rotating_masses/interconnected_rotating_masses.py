@@ -91,7 +91,6 @@ def construct_init_set(basic_matrix):
     alpha_min = np.array([[0.1], [1.0]])
     alpha_max = np.array([[0.2], [1.2]])
 
-
     print "\ninitial set basic matrix: \n{}".format(init_set_basic_matrix)
     print "\ninitial set alpha min: \n{}".format(alpha_min)
     print "\ninitial set alpha max: \n{}".format(alpha_max)
@@ -119,14 +118,15 @@ def construct_unsafe_set():
 def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
     'compute reachable set'
 
-    reachset, runtime = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
+    reachset, decoupling_time, reachset_computation_time = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
     print "\nlength of reachset = {}".format(len(reachset))
-    print "\nruntime of computing reachable set = {}".format(runtime)
+    print "\ndecoupling time = {}".format(decoupling_time)
+    print "\nruntime of computing reachable set = {}".format(reachset_computation_time)
 
     for i in xrange(0, len(reachset)):
         print "\nreachset_basic_matrix[{}] = \n{}".format(i, reachset[i].S)
 
-    return reachset, runtime
+    return reachset
 
 
 def get_line_set(reachset, direction_matrix):
@@ -243,7 +243,8 @@ def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name
     veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
     print "\nsafety status = {}".format(veri_result.status)
     print "\nruntime = {}".format(veri_result.runtime)
-    print "\nunsafe_point: output = {}, t = {} seconds".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1])
+    if veri_result.status == 'unsafe':
+        print "\nunsafe_point: output = {}, t = {} seconds, fes_alpha = {}".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1], veri_result.unsafe_point[2])
 
     return veri_result
 
@@ -294,7 +295,6 @@ def plot_unsafe_trace(veri_result):
     fig1.savefig('unsafe_trace.pdf')
 
 
-
 def main():
     'main function'
 
@@ -307,17 +307,18 @@ def main():
 
     totime = 10.0
     num_steps = 100
-    solver_names = ['vode', 'zvode', 'Isoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
+    solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
-    reachset, runtime = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
+    reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
     list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
-    # plot_vline_set(list_of_line_set_list, totime, num_steps)
-    # plot_boxes(list_of_line_set_list)
+    plot_vline_set(list_of_line_set_list, totime, num_steps)
+    plot_boxes(list_of_line_set_list)
     plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
 
     unsafe_set = construct_unsafe_set()
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
-    # plot_unsafe_trace(veri_res)
+    if veri_res.status == 'unsafe':
+        plot_unsafe_trace(veri_res)
 
 
 if __name__ == '__main__':

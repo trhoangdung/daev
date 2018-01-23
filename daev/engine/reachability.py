@@ -16,13 +16,13 @@ class ReachSetAssembler(object):
     @staticmethod
     def ode_sim(matrix_a, init_vec, totime, num_steps, solver_name):
         'compute simulation trace of an ode'
-        # solvers can be selected from the list = ['vode', 'zvode',  'Isoda',
+        # solvers can be selected from the list = ['vode', 'zvode',  'lsoda',
         # 'dopri5', 'dop853']
 
         start = time.time()
         assert isinstance(
             matrix_a, np.ndarray), 'error: matrix_a is not ndarray'
-        if solver_name != 'vode' and solver_name != 'zvode' and solver_name != 'Isoda' and solver_name != 'dopri5' and solver_name != 'dop853':
+        if solver_name != 'vode' and solver_name != 'zvode' and solver_name != 'lsoda' and solver_name != 'dopri5' and solver_name != 'dop853':
             raise ValueError('error: invalid solver name')
 
         n = matrix_a.shape[0]
@@ -56,7 +56,7 @@ class ReachSetAssembler(object):
         'compute reachable set of automnous linear ode: \dot{x} = Ax'
 
         # compute reachable set using simulation
-        # solvers can be selected from the list = ['vode', 'zvode',  'Isoda',
+        # solvers can be selected from the list = ['vode', 'zvode',  'lsoda',
         # 'dopri5', 'dop853']
         start = time.time()
         assert isinstance(
@@ -106,10 +106,12 @@ class ReachSetAssembler(object):
     def reach_autonomous_dae(dae_sys, init_reachset, totime, num_steps, solver_name):
         'compute reachable set for decoupled dae'
 
-        start = time.time()
+        start1 = time.time()
         assert isinstance(dae_sys, AutonomousDaeAutomation)
         assert isinstance(init_reachset, ReachSet)
         decoupled_sys, status = DecouplingAutonomous().get_decoupled_system(dae_sys)
+        decoupling_time = time.time() - start1
+        start2 = time.time()
         if status == 'error':
             raise ValueError('error in decoupling')
 
@@ -126,6 +128,6 @@ class ReachSetAssembler(object):
         else:
             print "\nerror: inconsistent initial condition"
 
-        runtime = time.time() - start
+        reachset_computation_time = time.time() - start2
 
-        return x_reach_set_list, runtime
+        return x_reach_set_list, decoupling_time, reachset_computation_time

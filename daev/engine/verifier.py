@@ -18,7 +18,9 @@ class VerificationResult(object):
         self.num_steps = None
         self.solver = None
         self.status = None    # safe/unsafe
+        self.unsafe_point = None
         self.unsafe_trace = []    # contain unsafe trace
+        self.unsafe_state_trace = []    # contain unsafe state (trace of all state variables)
         self.runtime = None    # time for verification/falsification
         self.reach_set = None    # contain reachable set
         self.unsafe_set = None   # contain unsafe set
@@ -37,13 +39,18 @@ class Verifier(object):
         assert isinstance(dae_sys, AutonomousDaeAutomation)
         assert isinstance(unsafe_set, LinearPredicate)
         reach_set, _ = ReachSetAssembler().reach_autonomous_dae(dae_sys, init_set, totime, num_steps, solver_name)
+        time_list = np.linspace(0.0, totime, num_steps + 1)
         n = len(reach_set)
         status = 'safe'
         unsafe_trace = []
+        unsafe_state_trace = []
         for i in xrange(0, n):
             rs = reach_set[i]
             status, fes_alpha, _, _ = rs.check_safety(unsafe_set)
             if status == 'unsafe':
+                constr_mat = np.dot(unsafe_set.C, rs.S)
+                unsafe_vec = np.dot(constr_mat, fes_alpha)
+                unsafe_point = (unsafe_vec, time_list[i])
                 break
         if status == 'unsafe':
             # compute unsafe trace
@@ -51,7 +58,9 @@ class Verifier(object):
                 rs = reach_set[i]
                 constr_mat = np.dot(unsafe_set.C, rs.S)
                 unsafe_vec = np.dot(constr_mat, fes_alpha)
+                unsafe_state = np.dot(rs.S, fes_alpha)
                 unsafe_trace.append(unsafe_vec)
+                unsafe_state_trace.append(unsafe_state)
 
         runtime = time.time() - start
 
@@ -60,7 +69,9 @@ class Verifier(object):
         ver_res.num_steps = num_steps
         ver_res.solver = solver_name
         ver_res.status = status
+        ver_res.unsafe_point = unsafe_point
         ver_res.unsafe_trace = unsafe_trace
+        ver_res.unsafe_state_trace = unsafe_state_trace
         ver_res.runtime = runtime
         ver_res.reach_set = reach_set
         ver_res.unsafe_set = unsafe_set

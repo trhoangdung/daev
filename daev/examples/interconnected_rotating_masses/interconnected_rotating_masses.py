@@ -106,7 +106,7 @@ def construct_init_set(basic_matrix):
 def construct_unsafe_set():
     'construct unsafe set'
 
-    # unsafe set: M2 <= -1.0
+    # unsafe set: M2 <= -0.7
     C = np.array([[0, 0, 1, 0, 0, 0]])
     d = np.array([[-0.7]])
     print "\nunsafe matrix C = {}".format(C)
@@ -228,10 +228,11 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
     ax2.tick_params(axis='z', labelsize=20)
     ax2.tick_params(axis='x', labelsize=20)
     ax2.tick_params(axis='y', labelsize=20)
-    ax2.set_xlabel('$z_1$', fontsize=20)
-    ax2.set_ylabel('$M_2$', fontsize=20)
-    ax2.set_zlabel(r'$t$', fontsize=20)
+    ax2.set_xlabel('\n' + '$z_1$', fontsize=20, linespacing=2)
+    ax2.set_ylabel('\n' + '$M_2$', fontsize=20, linespacing=3)
+    ax2.set_zlabel('\n' + r'$t$ (second)', fontsize=20, linespacing=0.5)
     fig2.suptitle('Reachable Set $(z_1, M_2)$ vs. time $t$', fontsize=25)
+    plt.tight_layout()
     fig2.savefig('reachset_vs_time.pdf')
     plt.show()
 
@@ -242,6 +243,7 @@ def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name
     veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
     print "\nsafety status = {}".format(veri_result.status)
     print "\nruntime = {}".format(veri_result.runtime)
+    print "\nunsafe_point: output = {}, t = {} seconds".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1])
 
     return veri_result
 
@@ -249,7 +251,47 @@ def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name
 def plot_unsafe_trace(veri_result):
     'plot unsafe trace'
 
+    time_list = np.linspace(0.0, veri_result.totime, veri_result.num_steps + 1)
+    m = veri_result.unsafe_trace[0].shape[0]
+    n = len(veri_result.unsafe_trace)
 
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+
+    # get output trace
+    for i in xrange(0, m):
+        trace_i = np.zeros(n)
+        unsafe_line_i = np.zeros(n)
+        for j in xrange(0, n):
+            trace_i_j = veri_result.unsafe_trace[j]
+            trace_i[j] = trace_i_j[i]
+            unsafe_line_i[j] = veri_result.unsafe_set.d[i]
+        ax1.plot(time_list, trace_i)
+        ax1.plot(time_list, unsafe_line_i, 'r')
+
+    # get input traces
+    input_mat = np.array([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]])
+
+    for i in xrange(0, 2):
+        input_i_trace = np.zeros(n)
+        for j in xrange(0, n):
+            input_trace = np.dot(input_mat, np.transpose(veri_result.unsafe_state_trace[j]))
+            input_i_trace[j] = input_trace[i]
+
+        ax1.plot(time_list, input_i_trace)
+
+    ax1.legend(['Output $M_2$', 'Unsafe boundary', 'Input $u_1(t)$', 'Input $u_2(t)$'])
+    ax1.set_ylim(-1.5, 1.5)
+    ax1.set_xlim(0, 10.0)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlabel('$t$ (seconds)', fontsize=20)
+    plt.ylabel(r'$M_2$', fontsize=20)
+    fig1.suptitle('Unsafe trace', fontsize=25)
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
+    plt.show()
+    fig1.savefig('unsafe_trace.pdf')
 
 
 
@@ -275,6 +317,7 @@ def main():
 
     unsafe_set = construct_unsafe_set()
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
+    # plot_unsafe_trace(veri_res)
 
 
 if __name__ == '__main__':

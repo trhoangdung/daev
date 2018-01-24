@@ -453,10 +453,12 @@ class index_3_daes(object):
         self.B = B.tocsc()
 
         C = lil_matrix((2, n), dtype=float)
-        # we are interested in the position and velocity of the middle mass
+        # we are interested in the position and velocity of the middle mass/ first mass
         p = math.ceil(g / 2)
         C[0, p] = 1        # position of the middle mass
         C[1, g + p] = 1    # velocity of the middle mass
+        # C[0, 0] = 1    # position of the first mass
+        # C[1, g] = 1    # velocity of the first mass
         self.C = C.tocsc()
 
         return self.E, self.A, self.B, self.C

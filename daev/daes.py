@@ -440,25 +440,24 @@ class index_3_daes(object):
         E2 = hstack([Z, M, zero_vec])
         E3 = csr_matrix((1, n), dtype=float)
         E = vstack([E1, E2, E3])
-        self.E = E
+        self.E = E.tocsc()
 
         A1 = hstack([Z, I, zero_vec])
         A2 = hstack([K, D, csr_matrix.transpose(-G)])
         A3 = hstack([G, csr_matrix.transpose(zero_vec),
                      csr_matrix((1, 1), dtype=float)])
         A = vstack([A1, A2, A3])
-        self.A = A
+        self.A = A.tocsc()
 
         B = vstack([zero_vec, B2, csr_matrix((1, 1), dtype=float)])
-        self.B = B
+        self.B = B.tocsc()
 
         C = lil_matrix((2, n), dtype=float)
         # we are interested in the position and velocity of the middle mass
         p = math.ceil(g / 2)
         C[0, p] = 1        # position of the middle mass
         C[1, g + p] = 1    # velocity of the middle mass
-        C = C.tocsr()
-        self.C = C
+        self.C = C.tocsc()
 
         return self.E, self.A, self.B, self.C
 

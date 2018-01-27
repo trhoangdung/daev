@@ -318,7 +318,7 @@ class index_3_daes(object):
 
         self.B = csc_matrix(np.array([[0], [0], [0], [1], [0], [0], [0]]))
         self.C = csc_matrix(
-            np.array([[0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0]]))
+            np.array([[0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0]]))
 
         return self.E, self.A, self.B, self.C
 

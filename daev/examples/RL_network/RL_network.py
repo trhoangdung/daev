@@ -114,10 +114,11 @@ def construct_init_set(basic_matrix):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    # unsafe set: x_1 + x_2 + x_3 <= -0.4
+    # unsafe set: x_1 + x_2 + x_3 >= 0.1
     C1 = dae_auto.matrix_c.todense()
-    C = C1[0]
-    d = np.array([[-0.4]])    # unsafe
+    C = np.zeros((1, C1.shape[1]))
+    C[0, 1] = -1
+    d = np.array([[-0.1]])
     print "\nunsafe matrix C = {}".format(C)
     print "\nunsafe vector d = {}".format(d)
     unsafe_set = LinearPredicate(C, d)

@@ -1,5 +1,5 @@
 '''
-Modified Nodal Analysis-1 example run file
+Modified Nodal Analysis-4 example run file
 Dung Tran: Jan/2018
 '''
 
@@ -265,6 +265,7 @@ def main():
     dae_auto = convert_to_auto_dae(dae_sys)
     adm_projs = get_admissible_projectors(dae_auto)
     print "\nindex of the MNA-4 benchmark is: {}".format(len(adm_projs))
+    # It is interesting that the index of this example is 3 not 2 as other MNA examples
     decoupled_dae = decouple_auto_dae(dae_auto)
     basic_matrix = generate_consistent_basic_matrix(decoupled_dae)
     init_set = construct_init_set(basic_matrix)

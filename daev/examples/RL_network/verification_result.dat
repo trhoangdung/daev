@@ -5,8 +5,8 @@ ToTime: 10.0
 
 Number of steps: 1000
 
-Status: unsafe
+Status: safe
 
-Unsafe Point: (matrix([[-0.57735027]]), 0.0, array([ 0.5]))
+Unsafe Point: []
 
-Runtime: [('decoupling_time', 0.002065896987915039), ('reachset_computation_time', 0.13886404037475586), ('checking_safety_time', 0.01876688003540039), ('verification_time', 0.1596968173980713)]
+Runtime: [('decoupling_time', 0.0005218982696533203), ('reachset_computation_time', 0.03815793991088867), ('checking_safety_time', 0.4132680892944336), ('verification_time', 0.4519479274749756)]

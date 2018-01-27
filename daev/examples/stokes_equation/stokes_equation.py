@@ -531,6 +531,36 @@ def get_reach_time_vs_num_basic_vectors():
     return reach_times
 
 
+def verify_large_stokes_equation(N):
+    'verify a large stokes equation'
+
+    E, A, B, C = get_benchmark(1.0, N)
+    dae_sys = construct_dae_automaton(E, A, B, C)
+    dae_auto = convert_to_auto_dae(dae_sys)
+    decoupled_dae = decouple_auto_dae(dae_auto)
+    basic_matrix = generate_consistent_basic_matrix(decoupled_dae)
+    init_set = construct_init_set(basic_matrix)
+
+    totime = 0.4
+    num_steps = 100
+    solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
+
+    unsafe_set = construct_unsafe_set(dae_auto)
+    veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
+
+    data_file = open('verification_result.dat', 'w')
+    data_file.write("\nVERIFICATION RESULT\n")
+
+    data_file.write("\nToTime: {}\n".format(veri_res.totime))
+    data_file.write("\nNumber of steps: {}\n".format(veri_res.num_steps))
+    data_file.write("\nStatus: {}\n".format(veri_res.status))
+    data_file.write("\nUnsafe Point: {}\n".format(veri_res.unsafe_point))
+    data_file.write("\nRuntime: {}\n".format(veri_res.runtime))
+    data_file.close()
+
+    return veri_res
+
+
 def main():
     'main function'
 
@@ -563,13 +593,15 @@ def main():
     print "\nplease select one in the following options to go, you can select all"
 
     # verification_time = get_verification_time()    # this takes about 45 minutes
-    solver_times = get_ode_solvers_time()    # this takes about 45 minutes
-    plot_reach_times_vs_solvers(solver_times)
+    # solver_times = get_ode_solvers_time()    # this takes about 45 minutes
+    # plot_reach_times_vs_solvers(solver_times)
 
     # reach_time_vs_num_steps = get_reach_time_vs_num_steps()    # this takes about 5 minutes
     # reach_time_vs_final_time = get_reach_time_vs_final_time()    # this takes about 5 minutes
     # get_reach_time_vs_num_basic_vectors()    # this takes about 3 mintues
 
+    # verify large stokes-equation
+    veri_res = verify_large_stokes_equation(40)
 
 if __name__ == '__main__':
 

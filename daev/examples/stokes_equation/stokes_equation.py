@@ -403,8 +403,6 @@ def plot_reach_times_vs_solvers(reach_times):
         dopri5_times.append(dopri51[1])
         dop853_times.append(dop8531[1])
 
-    print "\nvode times = {}".format(vode_times)
-
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
 
@@ -419,8 +417,8 @@ def plot_reach_times_vs_solvers(reach_times):
     ax1.set_xlim(min(dimensions) - 50, max(dimensions) + 50)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
-    plt.xlabel('$N$ (System dimension)', fontsize=20)
-    plt.ylabel(r'Computation time', fontsize=20)
+    plt.xlabel('$n$ (System dimension)', fontsize=20)
+    plt.ylabel(r'Computation time (seonds)', fontsize=20)
     fig1.suptitle('Reachable set computation time vs. solvers', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
@@ -546,7 +544,7 @@ def main():
     init_set = construct_init_set(basic_matrix)
 
     totime = 0.4
-    num_steps = 50
+    num_steps = 100
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
     # reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
@@ -565,8 +563,8 @@ def main():
     print "\nplease select one in the following options to go, you can select all"
 
     # verification_time = get_verification_time()    # this takes about 45 minutes
-    # solver_times = get_ode_solvers_time()    # this takes about 45 minutes
-    # plot_reach_times_vs_solvers(solver_times)
+    solver_times = get_ode_solvers_time()    # this takes about 45 minutes
+    plot_reach_times_vs_solvers(solver_times)
 
     # reach_time_vs_num_steps = get_reach_time_vs_num_steps()    # this takes about 5 minutes
     # reach_time_vs_final_time = get_reach_time_vs_final_time()    # this takes about 5 minutes

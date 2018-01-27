@@ -1,0 +1,12 @@
+
+VERIFICATION RESULT
+
+ToTime: 1.0
+
+Number of steps: 100
+
+Status: safe
+
+Unsafe Point: []
+
+Runtime: [('decoupling_time', 39.05827188491821), ('reachset_computation_time', 1677.0393960475922), ('checking_safety_time', 0.10181188583374023), ('verification_time', 1716.1994798183441)]

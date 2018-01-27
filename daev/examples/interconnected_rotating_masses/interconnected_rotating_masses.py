@@ -10,6 +10,7 @@ from daev.engine.set import LinearPredicate, ReachSet, RectangleSet2D, Rectangle
 from daev.engine.reachability import ReachSetAssembler
 from daev.engine.verifier import Verifier
 from daev.engine.plot import Plot
+from daev.engine.projectors import admissible_projectors
 from scipy.sparse import csc_matrix
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,6 +50,18 @@ def convert_to_auto_dae(dae_sys):
     print "\ndae_auto matrix_c = {}".format(dae_auto.matrix_c.todense())
 
     return dae_auto
+
+
+def get_admissible_projectors(dae_auto):
+    'get admissible projectors for the autonomous dae system'
+
+    adm_projs, _, _, _ = admissible_projectors(dae_auto.matrix_e.todense(), dae_auto.matrix_a.todense())
+    print "\nadmissible projectors:"
+    print "\nadm_projs = {}".format(adm_projs)
+    print "\nQ0 = {}".format(adm_projs[0])
+    print "\nQ1 = {}".format(adm_projs[1])
+
+    return adm_projs
 
 
 def decouple_auto_dae(dae_auto):
@@ -164,7 +177,7 @@ def plot_vline_set(list_of_line_set_list, totime, num_steps):
 
         ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
 
-    ax1.legend([r'$z_{1}(t)$', r'$M_{2}(t)$', r'$u_{1}(t) = M_{1}$', r'$u_2(t) = M_{4}$'])
+    ax1.legend([r'$z_{1}(t)$', r'$M_{2}(t)$', r'$u_{1}(t) = M_{1}$', r'$u_2(t) = M_{4}$'], fontsize=20)
     ax1.set_ylim(-2.0, 2.0)
     ax1.set_xlim(0, totime)
     plt.xticks(fontsize=20)
@@ -230,7 +243,7 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
     ax2.tick_params(axis='y', labelsize=20)
     ax2.set_xlabel('\n' + '$z_1$', fontsize=20, linespacing=2)
     ax2.set_ylabel('\n' + '$M_2$', fontsize=20, linespacing=3)
-    ax2.set_zlabel('\n' + r'$t$ (second)', fontsize=20, linespacing=0.5)
+    ax2.set_zlabel('\n' + r'$t$ (second)', fontsize=25, linespacing=0.5)
     fig2.suptitle('Reachable Set $(z_1, M_2)$ vs. time $t$', fontsize=25)
     plt.tight_layout()
     fig2.savefig('reachset_vs_time.pdf')
@@ -281,13 +294,13 @@ def plot_unsafe_trace(veri_result):
 
         ax1.plot(time_list, input_i_trace)
 
-    ax1.legend(['Output $M_2$', 'Unsafe boundary', 'Input $u_1(t)$', 'Input $u_2(t)$'])
+    ax1.legend(['Ouput $M_2(t)$', 'Unsafe boundary', 'Input $M_1(t)$', 'Input $M_4(t)$'], fontsize=20)
     ax1.set_ylim(-1.5, 1.5)
     ax1.set_xlim(0, 10.0)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('$t$ (seconds)', fontsize=20)
-    plt.ylabel(r'$M_2$', fontsize=20)
+    plt.ylabel(r'$M_1(t), M_2(t), M_4(t)$', fontsize=25)
     fig1.suptitle('Unsafe trace', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
@@ -301,6 +314,7 @@ def main():
     E, A, B, C = get_benchmark()
     dae_sys = construct_dae_automaton(E, A, B, C)
     dae_auto = convert_to_auto_dae(dae_sys)
+    adm_projs = get_admissible_projectors(dae_auto)
     decoupled_dae = decouple_auto_dae(dae_auto)
     basic_matrix = generate_consistent_basic_matrix(decoupled_dae)
     init_set = construct_init_set(basic_matrix)
@@ -309,11 +323,11 @@ def main():
     num_steps = 100
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
-    reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
-    list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
-    plot_vline_set(list_of_line_set_list, totime, num_steps)
-    plot_boxes(list_of_line_set_list)
-    plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
+    #reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
+    #list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
+    #plot_vline_set(list_of_line_set_list, totime, num_steps)
+    #plot_boxes(list_of_line_set_list)
+    #plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
 
     unsafe_set = construct_unsafe_set()
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])

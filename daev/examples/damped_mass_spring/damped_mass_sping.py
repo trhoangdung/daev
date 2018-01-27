@@ -107,7 +107,7 @@ def construct_init_set(basic_matrix):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    # unsafe set: p_c <= -2.0, the middle mass position
+    # unsafe set: p_c <= -1.0, the middle mass position
     c_mat = dae_auto.matrix_c.todense()
     C = c_mat[0]
     d = np.array([[-1.0]])
@@ -308,8 +308,7 @@ def main():
 
     print "\n############################################################"
     print "\nVERIFY/FALSIFY SAFETY PROPERTY OF A DAMPED-MASS-SPRING SYSTEM"
-    num_of_masses = 5    # >= 8, the system becomes unstable
-    E, A, B, C = get_benchmark(num_of_masses)
+    E, A, B, C = get_benchmark(5)
     dae_sys = construct_dae_automaton(E, A, B, C)
     dae_auto = convert_to_auto_dae(dae_sys)
     decoupled_dae = decouple_auto_dae(dae_auto)

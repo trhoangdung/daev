@@ -1,14 +1,14 @@
 
     VERIFICATION TIME
 
-('dimension = 17', [('decoupling_time', 0.0008440017700195312), ('reachset_computation_time', 0.004893064498901367), ('checking_safety_time', 0.01385498046875)])
+('dimension = 86', [('decoupling_time', 0.011790037155151367), ('reachset_computation_time', 0.019048213958740234), ('checking_safety_time', 0.0016739368438720703)])
 
-('dimension = 57', [('decoupling_time', 0.004185914993286133), ('reachset_computation_time', 0.010637998580932617), ('checking_safety_time', 0.0016829967498779297)])
+('dimension = 321', [('decoupling_time', 0.6262481212615967), ('reachset_computation_time', 0.36615490913391113), ('checking_safety_time', 0.0013918876647949219)])
 
-('dimension = 121', [('decoupling_time', 0.03119206428527832), ('reachset_computation_time', 0.03927206993103027), ('checking_safety_time', 0.001483917236328125)])
+('dimension = 706', [('decoupling_time', 6.317456007003784), ('reachset_computation_time', 2.9827611446380615), ('checking_safety_time', 0.0015289783477783203)])
 
-('dimension = 209', [('decoupling_time', 0.16928696632385254), ('reachset_computation_time', 0.1228182315826416), ('checking_safety_time', 0.0038309097290039062)])
+('dimension = 1241', [('decoupling_time', 40.38289403915405), ('reachset_computation_time', 19.292398929595947), ('checking_safety_time', 0.0016739368438720703)])
 
-('dimension = 321', [('decoupling_time', 0.611138105392456), ('reachset_computation_time', 0.35836005210876465), ('checking_safety_time', 0.0014090538024902344)])
+('dimension = 1926', [('decoupling_time', 155.31951117515564), ('reachset_computation_time', 68.14690208435059), ('checking_safety_time', 0.0018389225006103516)])
 
-('dimension = 457', [('decoupling_time', 1.830636978149414), ('reachset_computation_time', 0.9076220989227295), ('checking_safety_time', 0.0036699771881103516)])
+('dimension = 2761', [('decoupling_time', 466.38161993026733), ('reachset_computation_time', 200.8945791721344), ('checking_safety_time', 0.0020329952239990234)])

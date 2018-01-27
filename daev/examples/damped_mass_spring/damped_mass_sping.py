@@ -19,7 +19,6 @@ import matplotlib.patches as mpatches
 def get_benchmark(N):
     'get benchmark matrices'
 
-    # STOKES-EQUATION
     E, A, B, C = index_3_daes().damped_mass_spring(N)
     print "\n########################################################"
     print "\nDAMPED-MASS-SPRING:"

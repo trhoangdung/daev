@@ -1,9 +1,9 @@
-g'''
-Cart-pendulum example run file
+'''
+RL network example run file
 Dung Tran: Jan/2018
 '''
 
-from daev.daes import index_3_daes
+from daev.daes import index_2_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
 from daev.engine.set import LinearPredicate, ReachSet
@@ -20,9 +20,9 @@ import matplotlib.pyplot as plt
 def get_benchmark():
     'get benchmark matrices'
 
-    E, A, B, C = index_3_daes().cart_pendulum(10.0, 1.0, 2.0)
+    E, A, B, C = index_2_daes().RL_network(1.0, 2.0)
     print "\n########################################################"
-    print "\nCART-PENDULUM:"
+    print "\nRL NETWORK:"
     print "\ndimensions: {}".format(E.shape[0])
     print "\nE = {} \nA ={} \nB={} \nC={}".format(E.todense(), A.todense(), B.todense(), C.todense())
 
@@ -58,7 +58,6 @@ def get_admissible_projectors(dae_auto):
     print "\nadm_projs = {}".format(adm_projs)
     print "\nQ0 = {}".format(adm_projs[0])
     print "\nQ1 = {}".format(adm_projs[1])
-    print "\nQ1 = {}".format(adm_projs[1])
 
     return adm_projs
 
@@ -77,12 +76,6 @@ def decouple_auto_dae(dae_auto):
     print "\nnorm of N3 = {}".format(np.linalg.norm(decoupled_dae.N3))
     print "\ndecoupled dae_auto: L3 = {}".format(decoupled_dae.L3)
     print "\nnorm of L3 = {}".format(np.linalg.norm(decoupled_dae.L3))
-    print "\ndecoupled dae_auto: N4 = {}".format(decoupled_dae.N4)
-    print "\nnorm of N4 = {}".format(np.linalg.norm(decoupled_dae.N4))
-    print "\ndecoupled dae_auto: L4 = {}".format(decoupled_dae.L4)
-    print "\nnorm of L4 = {}".format(np.linalg.norm(decoupled_dae.L4))
-    print "\ndecoupled dae_auto: Z4 = {}".format(decoupled_dae.Z4)
-    print "\nnorm of Z4 = {}".format(np.linalg.norm(decoupled_dae.Z4))
 
     return decoupled_dae
 
@@ -181,12 +174,12 @@ def plot_vline_set(list_of_line_set_list, totime, num_steps):
 
         ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
 
-    ax1.legend([r'$x_{2}(t)$', r'$x_{4}(t)$'], fontsize=20)
-    ax1.set_ylim(0, 5.0)
+    ax1.legend([r'$x_{1}(t) + x_2(t) + x_3(t)$'], fontsize=20)
+    ax1.set_ylim(-1.0, 0.5)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('$t$', fontsize=20)
-    plt.ylabel(r'$x_{2}(t), x_4(t)$', fontsize=20)
+    plt.ylabel(r'$x_{1}(t) + x_2(t) + x_3(t)$', fontsize=20)
     fig1.suptitle('Output reachable set', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)

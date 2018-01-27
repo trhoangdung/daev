@@ -1,9 +1,9 @@
-g'''
-Cart-pendulum example run file
+'''
+RLC circuit example run file
 Dung Tran: Jan/2018
 '''
 
-from daev.daes import index_3_daes
+from daev.daes import index_1_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
 from daev.engine.set import LinearPredicate, ReachSet
@@ -20,9 +20,9 @@ import matplotlib.pyplot as plt
 def get_benchmark():
     'get benchmark matrices'
 
-    E, A, B, C = index_3_daes().cart_pendulum(10.0, 1.0, 2.0)
+    E, A, B, C = index_1_daes().RLC_circuit(1.0, 1.0, 2.0)
     print "\n########################################################"
-    print "\nCART-PENDULUM:"
+    print "\nRLC CIRCUIT:"
     print "\ndimensions: {}".format(E.shape[0])
     print "\nE = {} \nA ={} \nB={} \nC={}".format(E.todense(), A.todense(), B.todense(), C.todense())
 
@@ -57,8 +57,6 @@ def get_admissible_projectors(dae_auto):
     print "\nadmissible projectors:"
     print "\nadm_projs = {}".format(adm_projs)
     print "\nQ0 = {}".format(adm_projs[0])
-    print "\nQ1 = {}".format(adm_projs[1])
-    print "\nQ1 = {}".format(adm_projs[1])
 
     return adm_projs
 
@@ -73,16 +71,6 @@ def decouple_auto_dae(dae_auto):
     print "\nnorm of N1 = {}".format(np.linalg.norm(decoupled_dae.N1))
     print "\ndecoupled dae_auto: N2 = {}".format(decoupled_dae.N2)
     print "\nnorm of N2 = {}".format(np.linalg.norm(decoupled_dae.N2))
-    print "\ndecoupled dae_auto: N3 = {}".format(decoupled_dae.N3)
-    print "\nnorm of N3 = {}".format(np.linalg.norm(decoupled_dae.N3))
-    print "\ndecoupled dae_auto: L3 = {}".format(decoupled_dae.L3)
-    print "\nnorm of L3 = {}".format(np.linalg.norm(decoupled_dae.L3))
-    print "\ndecoupled dae_auto: N4 = {}".format(decoupled_dae.N4)
-    print "\nnorm of N4 = {}".format(np.linalg.norm(decoupled_dae.N4))
-    print "\ndecoupled dae_auto: L4 = {}".format(decoupled_dae.L4)
-    print "\nnorm of L4 = {}".format(np.linalg.norm(decoupled_dae.L4))
-    print "\ndecoupled dae_auto: Z4 = {}".format(decoupled_dae.Z4)
-    print "\nnorm of Z4 = {}".format(np.linalg.norm(decoupled_dae.Z4))
 
     return decoupled_dae
 
@@ -101,11 +89,11 @@ def generate_consistent_basic_matrix(decoupled_dae):
 def construct_init_set(basic_matrix):
     'construct linear predicate for initial set'
 
-    init_set_basic_matrix = basic_matrix[:, 0:1]
+    init_set_basic_matrix = basic_matrix[:, 0:2]
     print "\ninit_set_basic_matrix shape = {}".format(init_set_basic_matrix.shape)
 
-    alpha_min = np.array([[0.5]])
-    alpha_max = np.array([[0.8]])
+    alpha_min = np.array([[2.0], [0.8]])
+    alpha_max = np.array([[2.5], [1.2]])
 
     print "\ninitial set basic matrix: \n{}".format(init_set_basic_matrix)
     print "\ninitial set alpha min: \n{}".format(alpha_min)
@@ -121,10 +109,11 @@ def construct_init_set(basic_matrix):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    # unsafe set: x_1 + x_2 + x_3 <= -0.4
+    # unsafe set: x_1 + x_3 >= 0.5
     C1 = dae_auto.matrix_c.todense()
-    C = C1[0]
-    d = np.array([[-0.4]])    # unsafe
+    C = -C1[0] - C1[1]
+    # d = np.array([[-0.5]])    # unsafe
+    d = np.array([[-1.0]])    # safe
     print "\nunsafe matrix C = {}".format(C)
     print "\nunsafe vector d = {}".format(d)
     unsafe_set = LinearPredicate(C, d)
@@ -181,12 +170,12 @@ def plot_vline_set(list_of_line_set_list, totime, num_steps):
 
         ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
 
-    ax1.legend([r'$x_{2}(t)$', r'$x_{4}(t)$'], fontsize=20)
-    ax1.set_ylim(0, 5.0)
+    ax1.legend([r'$x_{1}(t)$', r'$x_3(t)$'], fontsize=20)
+    ax1.set_ylim(-1.0, 1.0)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('$t$', fontsize=20)
-    plt.ylabel(r'$x_{2}(t), x_4(t)$', fontsize=20)
+    plt.ylabel(r'$x_{1}(t), x_3(t)$', fontsize=20)
     fig1.suptitle('Output reachable set', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
@@ -237,11 +226,11 @@ def plot_unsafe_trace(veri_result):
         ax1.plot(time_list, trace_i)
         ax1.plot(time_list, unsafe_line_i, 'r')
 
-    ax1.legend(['$x_{1}(t) + x_2(t) + x_3(t)$', 'US: Unsafe boundary'], fontsize=20)
+    ax1.legend(['$-x_{1}(t) - x_3(t)$', 'US: Unsafe boundary'], fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('$t$ (seconds)', fontsize=20)
-    plt.ylabel(r'$x_{1}(t) + x_2(t) + x_3(t), US$', fontsize=20)
+    plt.ylabel(r'$-x_{1}(t) - x_3(t), US$', fontsize=20)
     fig1.suptitle('Unsafe trace', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
@@ -256,7 +245,7 @@ def main():
     dae_sys = construct_dae_automaton(E, A, B, C)
     dae_auto = convert_to_auto_dae(dae_sys)
     adm_projs = get_admissible_projectors(dae_auto)
-    print "\nindex of the RL benchmark is: {}".format(len(adm_projs))
+    print "\nindex of the RLC benchmark is: {}".format(len(adm_projs))
     decoupled_dae = decouple_auto_dae(dae_auto)
     basic_matrix = generate_consistent_basic_matrix(decoupled_dae)
     init_set = construct_init_set(basic_matrix)

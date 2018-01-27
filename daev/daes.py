@@ -290,7 +290,7 @@ class index_3_daes(object):
         self.B = None
         self.C = None
 
-    def car_pendulum(self, m1, m2, L):
+    def cart_pendulum(self, m1, m2, L):
         'This is 7-dimensional car pendulum benchmark'
 
         # This benchmark is from the paper:

@@ -336,7 +336,7 @@ class index_3_daes(object):
         isinstance(R1, float)
         isinstance(R2, float)
         isinstance(k, float)
-        assert (J > 0) and (L > 0) and (R1 > 0) and (R2 > 0) and (k > 0)
+        assert (J > 0) and (L > 0) and (R1 > 0) and (R2 > 0)
 
         self.E = csc_matrix(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
                                       [0, 0, 0, 1, 0, 0, 0, 0, 0],

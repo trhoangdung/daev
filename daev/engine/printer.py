@@ -21,10 +21,15 @@ def get_dynamics(C):
                 if j == 0:
                     yi = '{} {}'.format(yi, cx)
                 else:
-                    yi = '{} + {}'.format(yi, cx)
+                    if yi != '':
+                        yi = '{} + {}'.format(yi, cx)
+                    else:
+                        yi = '{}'.format(cx)
             elif C[i, j] < 0:
                 cx = '{}*x{}'.format(-C[i, j], j)
                 yi = '{} - {}'.format(yi, cx)
+        if yi == '':
+            yi = '0'
         dynamics.append(yi)
 
     return dynamics
@@ -121,7 +126,7 @@ def print_spaceex_cfg_file_autonomous_ode(xmin_vec, xmax_vec, ymin_vec, ymax_vec
     n = len(xmin_vec)
     m = len(ymin_vec)
     for i in xrange(0, n):
-        init_str = '{}x{} >= {} & x{} <= {} &'.format(init_str, i, xmin_vec[i], i, xmax_vec[i])
+        init_str = '{} x{} >= {} & x{} <= {} &'.format(init_str, i, xmin_vec[i], i, xmax_vec[i])
     for i in xrange(0, m):
         init_str = '{} y{} >= {} & y{} <= {} &'.format(init_str, i, ymin_vec[i], i, ymax_vec[i])
     init_str = '{} t == 0 & stoptime == {}'.format(init_str, stoptime)
@@ -140,16 +145,19 @@ def print_spaceex_cfg_file_autonomous_ode(xmin_vec, xmax_vec, ymin_vec, ymax_vec
             output = '{}y{}'.format(output, i)
     cfg_file.write('output-variables = "t, {}" \n'.format(output))
     cfg_file.write('output-format = "GEN"\n')
-    cfg_file.write('rel-err = 1.0e-8')
-    cfg_file.write('abs-err = 1.0e-12')
+    cfg_file.write('rel-err = 1.0e-8\n')
+    cfg_file.write('abs-err = 1.0e-12\n')
 
 
 def test():
     'test printer'
 
-    A = np.array([[1, 0], [0, 1]])
+    A = np.array([[1, 0], [0, -1]])
     C = np.array([[-1, -1]])
     print_spaceex_xml_file_autonomous_ode(A, C, 'test.xml')
+
+    #dynamics = get_dynamics(np.array([A[1]]))
+    #print dynamics
 
     xmin = [-1, -2]
     xmax = [1, 2]
@@ -161,6 +169,6 @@ def test():
     print_spaceex_cfg_file_autonomous_ode(xmin, xmax, ymin, ymax, stoptime, step, 'test.cfg')
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
     test()

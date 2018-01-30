@@ -113,7 +113,7 @@ class Verifier(object):
         assert isinstance(file_name, str)
         data_file = open(file_name, 'w')
         data_file.write("\nVERIFICATION RESULT\n")
-        data_file.write("\nSystem dimension: {}\n".format(ver_res.sys_dim))
+        data_file.write("\nSystem dimension: {} = {} state variables + {} inputs\n".format(ver_res.sys_dim, ver_res.sys_dim - ver_res.num_inputs, ver_res.num_inputs))
         data_file.write("\nUnsafe set:\n")
         data_file.write("\nUnsafe matrix : C = \n {}\n".format(ver_res.unsafe_set.C))
         data_file.write("\nUnsafe vector : d = \n {}\n".format(ver_res.unsafe_set.d))

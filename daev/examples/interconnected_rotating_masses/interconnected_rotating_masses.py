@@ -9,6 +9,7 @@ from daev.engine.decoupling import DecouplingAutonomous
 from daev.engine.set import LinearPredicate, ReachSet, RectangleSet2D, RectangleSet3D
 from daev.engine.reachability import ReachSetAssembler
 from daev.engine.verifier import Verifier
+from daev.engine.printer import spaceex_printer
 from daev.engine.plot import Plot
 from daev.engine.projectors import admissible_projectors
 from scipy.sparse import csc_matrix
@@ -113,33 +114,6 @@ def construct_init_set(basic_matrix):
     init_set.set_alpha_min_max(alpha_min, alpha_max)
 
     return init_set
-
-
-def construct_unsafe_set():
-    'construct unsafe set'
-
-    # unsafe set: M2 <= -0.7
-    C = np.array([[0, 0, 1, 0, 0, 0]])
-    d = np.array([[-0.7]])
-    print "\nunsafe matrix C = {}".format(C)
-    print "\nunsafe vector d = {}".format(d)
-    unsafe_set = LinearPredicate(C, d)
-
-    return unsafe_set
-
-
-def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
-    'compute reachable set'
-
-    reachset, decoupling_time, reachset_computation_time = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
-    print "\nlength of reachset = {}".format(len(reachset))
-    print "\ndecoupling time = {}".format(decoupling_time)
-    print "\nruntime of computing reachable set = {}".format(reachset_computation_time)
-
-    for i in xrange(0, len(reachset)):
-        print "\nreachset_basic_matrix[{}] = \n{}".format(i, reachset[i].S)
-
-    return reachset
 
 
 def get_line_set(reachset, direction_matrix):
@@ -250,16 +224,37 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
     plt.show()
 
 
+def construct_unsafe_set(dae_auto):
+    'construct unsafe set'
+
+    C = np.array([[0, 0, 1, 0, 0, 0]])    # M2 <= -0.7
+    d = np.array([[-0.7]])
+    print "\nunsafe_set 1:  matrix C = {}".format(C)
+    print "\nunsafe_set 1:  vector d = {}".format(d)
+    unsafe_set1 = LinearPredicate(C, d)
+
+    C = np.array([[0, 0, 0, 1, 0, 0]])    # M3 <= -0.3
+    d = np.array([[-1.0]])
+    print "\nunsafe_set 2:  matrix C = {}".format(C)
+    print "\nunsafe_set 2:  vector d = {}".format(d)
+    unsafe_set2 = LinearPredicate(C, d)
+
+    unsafe_set = [unsafe_set1, unsafe_set2]    # list of unsafe set
+
+    return unsafe_set
+
+
 def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name):
     'verify the safety of the system'
 
-    veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
-    print "\nsafety status = {}".format(veri_result.status)
-    print "\nruntime = {}".format(veri_result.runtime)
-    if veri_result.status == 'unsafe':
-        print "\nunsafe_point: output = {}, t = {} seconds, fes_alpha = {}".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1], veri_result.unsafe_point[2])
+    n = len(unsafe_set)
+    ver_res = []
+    for i in xrange(0, n):
+        us = unsafe_set[i]
+        vr = Verifier().check_safety(dae_auto, init_set, us, totime, num_steps, solver_name, 'verification_result_case_{}'.format(i))
+        ver_res.append(vr)
 
-    return veri_result
+    return ver_res
 
 
 def plot_unsafe_trace(veri_result):
@@ -289,7 +284,7 @@ def plot_unsafe_trace(veri_result):
     for i in xrange(0, 2):
         input_i_trace = np.zeros(n)
         for j in xrange(0, n):
-            input_trace = np.dot(input_mat, np.transpose(veri_result.unsafe_state_trace[j]))
+            input_trace = np.dot(input_mat, veri_result.unsafe_state_trace[j])
             input_i_trace[j] = input_trace[i]
 
         ax1.plot(time_list, input_i_trace)
@@ -314,25 +309,28 @@ def main():
     E, A, B, C = get_benchmark()
     dae_sys = construct_dae_automaton(E, A, B, C)
     dae_auto = convert_to_auto_dae(dae_sys)
-    adm_projs = get_admissible_projectors(dae_auto)
     decoupled_dae = decouple_auto_dae(dae_auto)
     basic_matrix = generate_consistent_basic_matrix(decoupled_dae)
     init_set = construct_init_set(basic_matrix)
 
     totime = 10.0
     num_steps = 100
-    solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
+    solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']
 
-    #reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
-    #list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
-    #plot_vline_set(list_of_line_set_list, totime, num_steps)
-    #plot_boxes(list_of_line_set_list)
-    #plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
+    # print spaceex model
+    spaceex_printer(decoupled_dae, init_set, totime, 0.01, 'RLC_circuit')
 
-    unsafe_set = construct_unsafe_set()
+    unsafe_set = construct_unsafe_set(dae_auto)
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
-    if veri_res.status == 'unsafe':
-        plot_unsafe_trace(veri_res)
+
+    reachset = veri_res[0].reach_set
+    list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
+    plot_vline_set(list_of_line_set_list, totime, num_steps)
+    plot_boxes(list_of_line_set_list)
+    plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
+
+    if veri_res[0].status == 'unsafe':
+        plot_unsafe_trace(veri_res[0])
 
 
 if __name__ == '__main__':

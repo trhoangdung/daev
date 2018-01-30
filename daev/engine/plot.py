@@ -37,7 +37,7 @@ class Plot(object):
 
         time_list = np.linspace(0.0, totime, num_steps + 1)
 
-        for i in xrange(0, n):
+        for i in xrange(0, n - m):
             line_set_x_i = []
             for j in xrange(0, k):
                 line_set_list = list_of_line_set_list[j]
@@ -149,7 +149,7 @@ class Plot(object):
                 plt.yticks(fontsize=20)
                 plt.xlabel('$t$', fontsize=20)
                 plt.ylabel(r'$y_{}$'.format(i), fontsize=20)
-                fig.suptitle('Unsafe trace: $y_{} = {} \leq {}$'.format(i, output_dynamics[i], unsafe_set.d[i][0]), fontsize=25)
+                fig.suptitle('Unsafe trace: $y_{}$ = {} $\leq {}$'.format(i, output_dynamics[i], unsafe_set.d[i][0]), fontsize=25)
                 plt.tight_layout()
                 plt.subplots_adjust(top=0.9)
                 fig.savefig('unsafe_y_{}.pdf'.format(i))
@@ -191,15 +191,15 @@ class Plot(object):
                 if C[i, j] > 0:
                     cx = '${}x_{}$'.format(C[i, j], j)
                     if j == 0:
-                        yi = '${} {}$'.format(yi, cx)
+                        yi = '{} {}'.format(yi, cx)
                     else:
                         if yi != '':
-                            yi = '${} + {}$'.format(yi, cx)
+                            yi = '{} + {}'.format(yi, cx)
                         else:
-                            yi = '${}$'.format(cx)
+                            yi = '{}'.format(cx)
                 elif C[i, j] < 0:
                     cx = '${}x_{}$'.format(-C[i, j], j)
-                    yi = '${} - {}$'.format(yi, cx)
+                    yi = '{} - {}'.format(yi, cx)
             if yi == '':
                 yi = '0'
             dynamics.append(yi)

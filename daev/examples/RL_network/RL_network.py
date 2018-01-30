@@ -3,7 +3,6 @@ RL network example run file
 Dung Tran: Jan/2018
 '''
 
-import matplotlib.pyplot as plt
 from daev.daes import index_2_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
@@ -158,7 +157,7 @@ def main():
         if vr.status == 'unsafe':
             Plot().plot_unsafe_trace(vr)
 
-        Plot().plot_state_reachset_vs_time(vr)    # plot state reach set
+    Plot().plot_state_reachset_vs_time(vr)    # plot state reach set
 
 
 if __name__ == '__main__':

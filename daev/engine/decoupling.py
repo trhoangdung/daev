@@ -786,4 +786,42 @@ class DecouplingAutonomous(object):
                 self.decoupled_sys = decoupled_sys
                 self.status = 'success'
 
+        # print decoupling result
+        print "\ndecoupling status = {}".format(self.status)
+        if self.status == 'success':
+            if ind == 1:
+                print "\nsystem is index 1"
+                print "\ndecoupled dae_auto: N1 = {}".format(decoupled_sys.N1)
+                print "\nnorm of N1 = {}".format(np.linalg.norm(decoupled_sys.N1))
+                print "\ndecoupled dae_auto: N2 = {}".format(decoupled_sys.N2)
+                print "\nnorm of N2 = {}".format(np.linalg.norm(decoupled_sys.N2))
+
+            if ind == 2:
+                print "\nsystem is index 2"
+                print "\ndecoupled dae_auto: N1 = {}".format(decoupled_sys.N1)
+                print "\nnorm of N1 = {}".format(np.linalg.norm(decoupled_sys.N1))
+                print "\ndecoupled dae_auto: N2 = {}".format(decoupled_sys.N2)
+                print "\nnorm of N2 = {}".format(np.linalg.norm(decoupled_sys.N2))
+                print "\ndecoupled dae_auto: N3 = {}".format(decoupled_sys.N3)
+                print "\nnorm of N3 = {}".format(np.linalg.norm(decoupled_sys.N3))
+                print "\ndecoupled dae_auto: L3 = {}".format(decoupled_sys.L3)
+                print "\nnorm of L3 = {}".format(np.linalg.norm(decoupled_sys.L3))
+
+            if ind == 3:
+                print "\nsystem is index 3"
+                print "\ndecoupled dae_auto: N1 = {}".format(decoupled_sys.N1)
+                print "\nnorm of N1 = {}".format(np.linalg.norm(decoupled_sys.N1))
+                print "\ndecoupled dae_auto: N2 = {}".format(decoupled_sys.N2)
+                print "\nnorm of N2 = {}".format(np.linalg.norm(decoupled_sys.N2))
+                print "\ndecoupled dae_auto: N3 = {}".format(decoupled_sys.N3)
+                print "\nnorm of N3 = {}".format(np.linalg.norm(decoupled_sys.N3))
+                print "\ndecoupled dae_auto: L3 = {}".format(decoupled_sys.L3)
+                print "\nnorm of L3 = {}".format(np.linalg.norm(decoupled_sys.L3))
+                print "\ndecoupled dae_auto: N4 = {}".format(decoupled_sys.N4)
+                print "\nnorm of N4 = {}".format(np.linalg.norm(decoupled_sys.N4))
+                print "\ndecoupled dae_auto: L4 = {}".format(decoupled_sys.L4)
+                print "\nnorm of L4 = {}".format(np.linalg.norm(decoupled_sys.L4))
+                print "\ndecoupled dae_auto: Z4 = {}".format(decoupled_sys.Z4)
+                print "\nnorm of Z4 = {}".format(np.linalg.norm(decoupled_sys.Z4))
+
         return self.decoupled_sys, self.status

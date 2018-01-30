@@ -48,9 +48,7 @@ class DaeAutomation(object):
         'convert dae to an autonomous dae'
 
         # if the input u satisfy: u' = Gu, Ex' = Ax + Bu, y = Cx can be converted into
-        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, new_y = [C 0; 0 I]* [x u]^T, we observe the input u
-
-        # the last m ouputs is to observe the user-defined inputs
+        # [E 0; 0 I] * [x' u']^T = [A B; 0 G][x u]^T, y = [C 0]* [x u]^T
 
         # if G == 0, we have an affine DAE
 
@@ -71,10 +69,10 @@ class DaeAutomation(object):
 
         nC = self.matrix_c.shape[0]
         Zm3 = csc_matrix((nC, m), dtype=float)
-        new_C_1 = hstack((self.matrix_c, Zm3), format='csc')
-        new_C = vstack((new_C_1, E2), format='csc')
+        new_C = hstack((self.matrix_c, Zm3), format='csc')
         autonomous_dae = AutonomousDaeAutomation()
         autonomous_dae.set_dynamics(new_E, new_A, new_C)
+        autonomous_dae.set_num_inputs(m)
 
         return autonomous_dae
 
@@ -87,6 +85,7 @@ class AutonomousDaeAutomation(object):
         self.matrix_e = None
         self.matrix_a = None
         self.matrix_c = None
+        self.num_inputs = None    # used when convert a dae system with input to autonomous dae
 
     def set_dynamics(self, matrix_e, matrix_a, matrix_c):
         'set dynamcis for dae automaton'
@@ -110,3 +109,9 @@ class AutonomousDaeAutomation(object):
             self.matrix_e = matrix_e
             self.matrix_a = matrix_a
             self.matrix_c = matrix_c
+
+    def set_num_inputs(self, num_inputs):
+        'set number of inputs of in conversion'
+
+        assert isinstance(num_inputs, int), 'error: number of input should be integer'
+        self.num_inputs = num_inputs

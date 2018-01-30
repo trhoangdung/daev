@@ -13,7 +13,6 @@ def get_dynamics(C):
     'print y = Cx'
 
     assert isinstance(C, np.ndarray)
-    print "\nC shape = {}".format(C.shape)
     m, n = C.shape
     dynamics = []
 

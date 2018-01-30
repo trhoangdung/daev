@@ -14,6 +14,8 @@ class VerificationResult(object):
     'contain verification result'
 
     def __init__(self):
+        self.sys_dim = None
+        self.num_inputs = None    # use to plot unsafe trace
         self.totime = None
         self.num_steps = None
         self.solver = None
@@ -34,9 +36,10 @@ class Verifier(object):
         self.verification_result = None    # contain verification result object
 
     def check_safety(self, dae_sys, init_set, unsafe_set,
-                     totime, num_steps, solver_name):
+                     totime, num_steps, solver_name, file_name):
         'check safety of a dae system'
 
+        # file name is used to save the veification result
         assert isinstance(dae_sys, AutonomousDaeAutomation)
         assert isinstance(unsafe_set, LinearPredicate)
         reach_set, decoupling_time, reachset_computation_time = ReachSetAssembler(
@@ -53,6 +56,7 @@ class Verifier(object):
             status, fes_alpha, _, _ = rs.check_safety(unsafe_set)
             if status == 'unsafe':
                 constr_mat = np.dot(unsafe_set.C, rs.S)
+                fes_alpha = fes_alpha.reshape(fes_alpha.shape[0], 1)
                 unsafe_vec = np.dot(constr_mat, fes_alpha)
                 unsafe_point = (unsafe_vec, time_list[i], fes_alpha)
                 break
@@ -62,6 +66,8 @@ class Verifier(object):
                 rs = reach_set[i]
                 constr_mat = np.dot(unsafe_set.C, rs.S)
                 unsafe_vec = np.dot(constr_mat, fes_alpha)
+                print "\nshape of fes_alpha = {}".format(fes_alpha.shape)
+                print "\nunsafe vec = {}".format(unsafe_vec)
                 unsafe_state = np.dot(rs.S, fes_alpha)
                 unsafe_trace.append(unsafe_vec)
                 unsafe_state_trace.append(unsafe_state)
@@ -69,6 +75,8 @@ class Verifier(object):
         checking_safety_time = time.time() - start
 
         ver_res = VerificationResult()
+        ver_res.sys_dim = dae_sys.matrix_a.shape[0]
+        ver_res.num_inputs = dae_sys.num_inputs
         ver_res.totime = totime
         ver_res.num_steps = num_steps
         ver_res.solver = solver_name
@@ -90,5 +98,30 @@ class Verifier(object):
         ver_res.reach_set = reach_set
         ver_res.unsafe_set = unsafe_set
         self.verification_result = ver_res
+
+        # print and save result
+        print "\n##########VERIFICATION RESULT###########"
+        print "\nsystem dimension: {}".format(ver_res.sys_dim)
+        print "\nunsafe set:"
+        print "\nunsafe matrix = \n {}".format(ver_res.unsafe_set.C)
+        print "\nunsafe vector = \n {}".format(ver_res.unsafe_set.d)
+        print "\nsafety status = {}".format(ver_res.status)
+        print "\nruntime = {}".format(ver_res.runtime)
+        if ver_res.status == 'unsafe':
+            print "\nunsafe_point: output = {}, t = {} seconds, fes_alpha = {}".format(ver_res.unsafe_point[0], ver_res.unsafe_point[1], ver_res.unsafe_point[2])
+
+        assert isinstance(file_name, str)
+        data_file = open(file_name, 'w')
+        data_file.write("\nVERIFICATION RESULT\n")
+        data_file.write("\nSystem dimension: {}\n".format(ver_res.sys_dim))
+        data_file.write("\nUnsafe set:\n")
+        data_file.write("\nUnsafe matrix : C = \n {}\n".format(ver_res.unsafe_set.C))
+        data_file.write("\nUnsafe vector : d = \n {}\n".format(ver_res.unsafe_set.d))
+        data_file.write("\nToTime: {}\n".format(ver_res.totime))
+        data_file.write("\nNumber of steps: {}\n".format(ver_res.num_steps))
+        data_file.write("\nSafety Status: {}\n".format(ver_res.status))
+        data_file.write("\nUnsafe Point: {}\n".format(ver_res.unsafe_point))
+        data_file.write("\nRuntime: {}\n".format(ver_res.runtime))
+        data_file.close()
 
         return self.verification_result

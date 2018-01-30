@@ -9,4 +9,4 @@ Status: safe
 
 Unsafe Point: []
 
-Runtime: [('decoupling_time', 0.0013270378112792969), ('reachset_computation_time', 0.20276379585266113), ('checking_safety_time', 2.8539609909057617), ('verification_time', 3.058051824569702)]
+Runtime: [('decoupling_time', 0.0012309551239013672), ('reachset_computation_time', 0.19538402557373047), ('checking_safety_time', 2.7367842197418213), ('verification_time', 2.933399200439453)]

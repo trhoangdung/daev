@@ -3,6 +3,7 @@ RLC circuit example run file
 Dung Tran: Jan/2018
 '''
 
+import matplotlib.pyplot as plt
 from daev.daes import index_1_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
@@ -11,10 +12,9 @@ from daev.engine.reachability import ReachSetAssembler
 from daev.engine.verifier import Verifier
 from daev.engine.plot import Plot
 from daev.engine.projectors import admissible_projectors
+from daev.engine.printer import spaceex_printer
 from scipy.sparse import csc_matrix
-from scipy.io import loadmat
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def get_benchmark():
@@ -253,6 +253,9 @@ def main():
     totime = 10.0
     num_steps = 1000
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']
+
+     # print spaceex model
+    spaceex_printer(decoupled_dae, init_set, totime, 0.01, 'RLC_circuit')
 
     unsafe_set = construct_unsafe_set(dae_auto)
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])

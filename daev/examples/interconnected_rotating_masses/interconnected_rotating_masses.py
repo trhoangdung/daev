@@ -7,7 +7,6 @@ from daev.daes import index_2_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
 from daev.engine.set import LinearPredicate, ReachSet, RectangleSet2D, RectangleSet3D
-from daev.engine.reachability import ReachSetAssembler
 from daev.engine.verifier import Verifier
 from daev.engine.printer import spaceex_printer
 from daev.engine.plot import Plot
@@ -227,13 +226,13 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    C = np.array([[0, 0, 1, 0, 0, 0]])    # M2 <= -0.7
-    d = np.array([[-0.7]])
+    C = np.array([[0, 0, 1, 0, 0, 0]])    # M2 <= -0.9
+    d = np.array([[-0.9]])
     print "\nunsafe_set 1:  matrix C = {}".format(C)
     print "\nunsafe_set 1:  vector d = {}".format(d)
     unsafe_set1 = LinearPredicate(C, d)
 
-    C = np.array([[0, 0, 0, 1, 0, 0]])    # M3 <= -0.3
+    C = np.array([[0, 0, 0, 1, 0, 0]])    # M3 <= -1.0
     d = np.array([[-1.0]])
     print "\nunsafe_set 2:  matrix C = {}".format(C)
     print "\nunsafe_set 2:  vector d = {}".format(d)
@@ -314,11 +313,11 @@ def main():
     init_set = construct_init_set(basic_matrix)
 
     totime = 10.0
-    num_steps = 100
+    num_steps = 1000
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']
 
     # print spaceex model
-    spaceex_printer(decoupled_dae, init_set, totime, 0.01, 'RLC_circuit')
+    spaceex_printer(decoupled_dae, init_set, totime, 0.01, 'interconnected_rotating_masses')
 
     unsafe_set = construct_unsafe_set(dae_auto)
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
@@ -331,6 +330,8 @@ def main():
 
     if veri_res[0].status == 'unsafe':
         plot_unsafe_trace(veri_res[0])
+
+    Plot().plot_state_reachset_vs_time(veri_res[0])
 
 
 if __name__ == '__main__':

@@ -6,14 +6,12 @@ Dung Tran: Jan/2018
 from daev.daes import index_3_daes
 from daev.engine.dae_automaton import DaeAutomation
 from daev.engine.decoupling import DecouplingAutonomous
-from daev.engine.set import LinearPredicate, ReachSet, RectangleSet2D, RectangleSet3D
-from daev.engine.reachability import ReachSetAssembler
+from daev.engine.set import LinearPredicate, ReachSet
 from daev.engine.verifier import Verifier
 from daev.engine.plot import Plot
+from daev.engine.printer import spaceex_printer
 from scipy.sparse import csc_matrix
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 
 def get_benchmark(N):
@@ -106,200 +104,36 @@ def construct_init_set(basic_matrix):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    # unsafe set: p_c <= -1.0, the middle mass position
+    # unsafe set: p_c >= 1.0 and v_c >= 1.5, the middle mass position
     c_mat = dae_auto.matrix_c.todense()
-    C = c_mat[0]
-    d = np.array([[-1.0]])
-    print "\nunsafe matrix C = {}".format(C)
-    print "\nunsafe vector d = {}".format(d)
-    unsafe_set = LinearPredicate(C, d)
+    C = -c_mat
+    d = np.array([[-1.0], [-1.5]])
+    print "\nunsafe_set 1:  matrix C = {}".format(C)
+    print "\nunsafe_set 1:  vector d = {}".format(d)
+    unsafe_set1 = LinearPredicate(C, d)
+
+    C = -c_mat[1]    # v_c <= -0.2
+    d = np.array([[0.2]])
+    print "\nunsafe_set 2:  matrix C = {}".format(C)
+    print "\nunsafe_set 2:  vector d = {}".format(d)
+    unsafe_set2 = LinearPredicate(C, d)
+
+    unsafe_set = [unsafe_set1, unsafe_set2]    # list of unsafe set
 
     return unsafe_set
-
-
-def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
-    'compute reachable set'
-
-    reachset, decoupling_time, reachset_computation_time = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
-    print "\nlength of reachset = {}".format(len(reachset))
-    print "\ndecoupling time = {}".format(decoupling_time)
-    print "\nreachable set computation time = {}".format(reachset_computation_time)
-
-    for i in xrange(0, len(reachset)):
-        print "\nreachset_basic_matrix[{}] = \n{}".format(i, reachset[i].S)
-
-    return reachset
-
-
-def get_line_set(reachset, direction_matrix):
-    'get list of line set to plot the reachable set'
-
-    list_of_line_set_list = []
-    print "\ndirection_matrix = {}".format(direction_matrix)
-    for i in xrange(0, len(reachset)):
-        line_set = reachset[i].get_line_set(direction_matrix)
-        list_of_line_set_list.append(line_set)
-        print "\nline_set_list[{}] = {}".format(i, line_set)
-
-    return list_of_line_set_list
-
-
-def plot_vline_set(list_of_line_set_list, totime, num_steps):
-    'plot reach set of individual outputs'
-
-    n = len(list_of_line_set_list)    # number of line_set list
-    m = len(list_of_line_set_list[0])    # number of outputs
-    time_list = np.linspace(0.0, totime, num_steps + 1)
-    print "\ntime_list = {}".format(time_list)
-
-    colors = ['b', 'g']
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-    pl1 = Plot()
-
-    for i in xrange(0, m - 1):
-        line_set_output_i = []
-        for j in xrange(0, n):
-            line_set_list = list_of_line_set_list[j]
-            line_set_output_i.append(line_set_list[i])
-            print "\noutput_{} at step {}: min = {}, max = {}".format(i, j, line_set_list[i].xmin, line_set_list[i].xmax)
-
-        ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
-
-    ax1.legend([r'$p_{c}(t)$ : position', r'$v_{c}(t)$ : velocity'])
-    ax1.set_ylim(-1.6, 1.0)
-    ax1.set_xlim(0, totime)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$', fontsize=20)
-    plt.ylabel(r'$p_c, v_c$', fontsize=20)
-    fig1.suptitle('Reachable set of the middle mass', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    fig1.savefig('individual_reachset_middle_mass.pdf')
-    plt.show()
-
-
-def plot_boxes(list_of_line_set_list):
-    'plot reach set of two outputs as boxes'
-
-    n = len(list_of_line_set_list)
-
-    box_list = []
-    for j in xrange(0, n):
-        line_set_list = list_of_line_set_list[j]
-        box_2d = RectangleSet2D()
-        box_2d.set_bounds(line_set_list[0].xmin, line_set_list[0].xmax, line_set_list[1].xmin, line_set_list[1].xmax)
-        box_list.append(box_2d)
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-    pl1 = Plot()
-    ax1 = pl1.plot_boxes(ax1, box_list, facecolor='b', edgecolor='b')
-    ax1.set_ylim(-0.5, 0.5)
-    ax1.set_xlim(-1.6, 1.0)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$p_c$: middle mass position', fontsize=20)
-    plt.ylabel(r'$v_c$: middle mass velocity', fontsize=20)
-    blue_patch = mpatches.Patch(color='b', label='$(p_c, v_c)$')
-    plt.legend(handles=[blue_patch])
-    fig1.suptitle('Reachable set $(p_c, v_c)$ in $[0, 100]$ seconds', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    plt.show()
-    fig1.savefig('reachset_pc_vc.pdf')
-
-
-def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
-    'plot boxes vs time'
-
-    n = len(list_of_line_set_list)
-    time_list = np.linspace(0.0, totime, num_steps + 1)
-
-    box_list = []
-    for j in xrange(0, n):
-        line_set_list = list_of_line_set_list[j]
-        box_3d = RectangleSet3D()
-        box_3d.set_bounds(line_set_list[0].xmin, line_set_list[0].xmax, line_set_list[1].xmin, line_set_list[1].xmax, time_list[j], time_list[j])
-        box_list.append(box_3d)
-
-    fig2 = plt.figure()
-    ax2 = fig2.add_subplot(111, projection='3d')
-    pl2 = Plot()
-    ax2 = pl2.plot_3d_boxes(ax2, box_list, facecolor='b', linewidth=0.5, edgecolor='b')
-    ax2.set_xlim(-1.6, 1.0)
-    ax2.set_ylim(-1.0, 1.0)
-    ax2.set_zlim(0, totime)
-    ax2.tick_params(axis='z', labelsize=20)
-    ax2.tick_params(axis='x', labelsize=20)
-    ax2.tick_params(axis='y', labelsize=20)
-    ax2.set_xlabel('\n' + '$p_c$ : position', fontsize=20, linespacing=2)
-    ax2.set_ylabel('\n' + '$v_c$ : velocity', fontsize=20, linespacing=3)
-    ax2.set_zlabel('\n' + r'$t$ (seconds)', fontsize=20, linespacing=1)
-    fig2.suptitle('Reachable Set $(p_c, v_c)$ vs. time $t$', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    fig2.savefig('reachset_pc_vc_vs_time.pdf')
-    plt.show()
 
 
 def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name):
     'verify the safety of the system'
 
-    veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
-    print "\nsafety status = {}".format(veri_result.status)
-    print "\nruntime = {}".format(veri_result.runtime)
-    if veri_result.status == 'unsafe':
-        print "\nunsafe_point: output = {}, t = {} seconds, fes_alpha = {}".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1], veri_result.unsafe_point[2])
+    n = len(unsafe_set)
+    ver_res = []
+    for i in xrange(0, n):
+        us = unsafe_set[i]
+        vr = Verifier().check_safety(dae_auto, init_set, us, totime, num_steps, solver_name, 'verification_result_case_{}'.format(i))
+        ver_res.append(vr)
 
-    return veri_result
-
-
-def plot_unsafe_trace(veri_result, dae_auto_dimension):
-    'plot unsafe trace'
-
-    time_list = np.linspace(0.0, veri_result.totime, veri_result.num_steps + 1)
-    m = veri_result.unsafe_trace[0].shape[0]
-    n = len(veri_result.unsafe_trace)
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-
-    # get output trace
-    for i in xrange(0, m):
-        trace_i = np.zeros(n)
-        unsafe_line_i = np.zeros(n)
-        for j in xrange(0, n):
-            trace_i_j = veri_result.unsafe_trace[j]
-            trace_i[j] = trace_i_j[i]
-            unsafe_line_i[j] = veri_result.unsafe_set.d[i]
-        ax1.plot(time_list, trace_i)
-        ax1.plot(time_list, unsafe_line_i, 'r')
-
-    # get input traces
-    input_mat = np.zeros(dae_auto_dimension)
-    input_mat[dae_auto_dimension - 1] = 1
-
-    input_trace = np.zeros(n)
-    for j in xrange(0, n):
-        input_j = np.dot(input_mat, np.transpose(veri_result.unsafe_state_trace[j]))
-        input_trace[j] = input_j
-
-    ax1.plot(time_list, input_trace)
-
-    ax1.legend(['$p_c$ : middle mass position', 'US: unsafe boundary', 'Input $u(t)$'])
-    ax1.set_ylim(-2.0, 1.0)
-    ax1.set_xlim(0, veri_result.totime)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$ (seconds)', fontsize=20)
-    plt.ylabel(r'$p_c$, US, $u(t)$', fontsize=20)
-    fig1.suptitle('Unsafe trace', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    plt.show()
-    fig1.savefig('unsafe_trace.pdf')
+    return ver_res
 
 
 def main():
@@ -318,16 +152,16 @@ def main():
     num_steps = 1000
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']    # similar to ode45 mathlab
 
-    reachset = compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_names[3])
-    list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
-    plot_vline_set(list_of_line_set_list, totime, num_steps)
-    plot_boxes(list_of_line_set_list)
-    plot_boxes_vs_time(list_of_line_set_list, totime, num_steps)
+    # print spaceex model
+    spaceex_printer(decoupled_dae, init_set, totime, 0.1, 'damped_mass_spring')
 
     unsafe_set = construct_unsafe_set(dae_auto)
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
-    if veri_res.status == 'unsafe':
-        plot_unsafe_trace(veri_res, dae_auto.matrix_a.shape[0])
+    for vr in veri_res:
+        if vr.status == 'unsafe':
+            Plot().plot_unsafe_trace(vr)
+
+    # Plot().plot_state_reachset_vs_time(vr)    # plot state reach set
 
 
 if __name__ == '__main__':

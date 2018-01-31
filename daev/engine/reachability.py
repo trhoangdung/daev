@@ -36,7 +36,7 @@ class ReachSetAssembler(object):
         t = np.linspace(t0, totime, num_steps + 1)
 
         solver = ode(fun)
-        solver.set_integrator(solver_name)
+        solver.set_integrator(solver_name, rtol=1e-8, atol=1e-12,)
         solver.set_initial_value(init_vec, t0)
         sol = np.empty((num_steps + 1, n))
         sol[0] = init_vec

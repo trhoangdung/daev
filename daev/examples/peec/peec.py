@@ -10,6 +10,7 @@ from daev.engine.reachability import ReachSetAssembler
 from daev.engine.verifier import Verifier
 from daev.engine.plot import Plot
 from daev.engine.projectors import admissible_projectors
+from daev.engine.printer import spaceex_printer
 from scipy.sparse import csc_matrix
 from scipy.io import loadmat
 import numpy as np
@@ -122,128 +123,29 @@ def construct_unsafe_set(dae_auto):
     C1 = dae_auto.matrix_c.todense()
     C = -C1[0]
     d = np.array([[-0.05]])    # safe
-    # d = np.array([[-0.01]])    # unsafe
-    print "\nunsafe matrix C = {}".format(C)
-    print "\nunsafe vector d = {}".format(d)
-    unsafe_set = LinearPredicate(C, d)
+    print "\nunsafe_set 1:  matrix C = {}".format(C)
+    print "\nunsafe_set 1:  vector d = {}".format(d)
+    unsafe_set1 = LinearPredicate(C, d)
+    d = np.array([[-0.01]])    # unsafe
+    print "\nunsafe_set 2:  matrix C = {}".format(C)
+    print "\nunsafe_set 2:  vector d = {}".format(d)
+    unsafe_set2 = LinearPredicate(C, d)
+    unsafe_set = [unsafe_set1, unsafe_set2]    # list of unsafe set
 
     return unsafe_set
-
-
-def compute_reachable_set(dae_auto, init_set, totime, num_steps, solver_name):
-    'compute reachable set'
-
-    reachset, decoupling_time, reachset_computation_time = ReachSetAssembler.reach_autonomous_dae(dae_auto, init_set, totime, num_steps, solver_name)
-    print "\nlength of reachset = {}".format(len(reachset))
-    print "\ndecoupling time = {}".format(decoupling_time)
-    print "\nruntime of computing reachable set = {}".format(reachset_computation_time)
-
-    for i in xrange(0, len(reachset)):
-        print "\nreachset_basic_matrix[{}] = \n{}".format(i, reachset[i].S)
-
-    return reachset
-
-
-def get_line_set(reachset, direction_matrix):
-    'get list of line set to plot the reachable set'
-
-    list_of_line_set_list = []
-    print "\ndirection_matrix = {}".format(direction_matrix)
-    for i in xrange(0, len(reachset)):
-        line_set = reachset[i].get_line_set(direction_matrix)
-        list_of_line_set_list.append(line_set)
-        print "\nline_set_list[{}] = {}".format(i, line_set)
-
-    return list_of_line_set_list
-
-
-def plot_vline_set(list_of_line_set_list, totime, num_steps):
-    'plot reach set of individual outputs'
-
-    n = len(list_of_line_set_list)    # number of line_set list
-    m = len(list_of_line_set_list[0])    # number of outputs
-    time_list = np.linspace(0.0, totime, num_steps + 1)
-    print "\ntime_list = {}".format(time_list)
-
-    colors = ['b', 'g', 'maroon', 'c']
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-    pl1 = Plot()
-
-    for i in xrange(0, m - 1):
-        line_set_output_i = []
-        for j in xrange(0, n):
-            line_set_list = list_of_line_set_list[j]
-            line_set_output_i.append(line_set_list[i])
-            print "\noutput_{} at step {}: min = {}, max = {}".format(i, j, line_set_list[i].xmin, line_set_list[i].xmax)
-
-        ax1 = pl1.plot_vlines(ax1, time_list.tolist(), line_set_output_i, colors=colors[i], linestyles='solid')
-
-    ax1.legend([r'$x_{478}(t)$'], fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$', fontsize=20)
-    plt.ylabel(r'$x_{478}$', fontsize=20)
-    fig1.suptitle('Output reachable set', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    fig1.savefig('Output_reachset.pdf')
-    plt.show()
 
 
 def verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name):
     'verify the safety of the system'
 
-    veri_result = Verifier().check_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_name)
-    print "\nsafety status = {}".format(veri_result.status)
-    print "\nruntime = {}".format(veri_result.runtime)
-    if veri_result.status == 'unsafe':
-        print "\nunsafe_point: output = {}, t = {} seconds, fes_alpha = {}".format(veri_result.unsafe_point[0], veri_result.unsafe_point[1], veri_result.unsafe_point[2])
+    n = len(unsafe_set)
+    ver_res = []
+    for i in xrange(0, n):
+        us = unsafe_set[i]
+        vr = Verifier().check_safety(dae_auto, init_set, us, totime, num_steps, solver_name, 'verification_result_case_{}'.format(i))
+        ver_res.append(vr)
 
-    data_file = open('verification_result.dat', 'w')
-    data_file.write("\nVERIFICATION RESULT\n")
-
-    data_file.write("\nToTime: {}\n".format(veri_result.totime))
-    data_file.write("\nNumber of steps: {}\n".format(veri_result.num_steps))
-    data_file.write("\nStatus: {}\n".format(veri_result.status))
-    data_file.write("\nUnsafe Point: {}\n".format(veri_result.unsafe_point))
-    data_file.write("\nRuntime: {}\n".format(veri_result.runtime))
-    data_file.close()
-
-    return veri_result
-
-
-def plot_unsafe_trace(veri_result):
-    'plot unsafe trace'
-
-    time_list = np.linspace(0.0, veri_result.totime, veri_result.num_steps + 1)
-    m = veri_result.unsafe_trace[0].shape[0]
-    n = len(veri_result.unsafe_trace)
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-
-    # get output trace
-    for i in xrange(0, m):
-        trace_i = np.zeros(n)
-        unsafe_line_i = np.zeros(n)
-        for j in xrange(0, n):
-            trace_i_j = veri_result.unsafe_trace[j]
-            trace_i[j] = trace_i_j[i]
-            unsafe_line_i[j] = veri_result.unsafe_set.d[i]
-        ax1.plot(time_list, unsafe_line_i, 'r')
-        ax1.plot(time_list, trace_i)
-
-    ax1.legend(['Ouput: -$x_{478}(t)$', 'US: Unsafe boundary'], fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$ (seconds)', fontsize=20)
-    plt.ylabel(r'-$x_{478}(t), US$', fontsize=25)
-    fig1.suptitle('Unsafe trace', fontsize=25)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    plt.show()
-    fig1.savefig('unsafe_trace.pdf')
+    return ver_res
 
 
 def main():
@@ -262,15 +164,16 @@ def main():
     num_steps = 1000
     solver_names = ['vode', 'zvode', 'lsoda', 'dopri5', 'dop853']
 
+    # print spaceex model
+    spaceex_printer(decoupled_dae, init_set, totime, 0.01, 'peec')
+
     unsafe_set = construct_unsafe_set(dae_auto)
     veri_res = verify_safety(dae_auto, init_set, unsafe_set, totime, num_steps, solver_names[3])
-    if veri_res.status == 'unsafe':
-        plot_unsafe_trace(veri_res)    # plot unsafe trace if the system is unsafe
 
-    # plot the reachable set
-    reachset = veri_res.reach_set
-    list_of_line_set_list = get_line_set(reachset, dae_auto.matrix_c.todense())
-    plot_vline_set(list_of_line_set_list, totime, num_steps)
+    for vr in veri_res:
+        if vr.status == 'unsafe':
+            Plot().plot_unsafe_trace(vr)
+    Plot().plot_output_reachset_vs_time(vr, dae_auto.matrix_c.todense())    # plot state x_478 (output) reach set
 
 
 if __name__ == '__main__':

@@ -12,9 +12,12 @@ Dung Tran: 4/16/2018
 
 from krypy.utils import arnoldi
 from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import eigs
 from scipy.linalg import expm
 import numpy as np
+import math
 from daev.pdes import HeatOneDimension
+from daev.daes import index_1_daes
 
 
 class KrylovSubspaceCPU(object):
@@ -47,44 +50,101 @@ class KrylovSubspaceCPU(object):
     def get_error(self, T, num_steps):
         'get error bound, computation is based on Theorem 3.1 of paper 1)'
 
-        # Using Simpson's rule for integration of matrix expoinential
+        # Reference: ERROR BOUNDS FOR THE KRYLOV SUBSPACE METHODS FOR COMUPTATIONS OF MATRIX EXPONENTIALS
+        # Theorem 3.1
+        # Using Simpson's rule for integration
 
         assert isinstance(T, float) and T > 0, 'error: invalid time T'
         assert isinstance(
             num_steps, int) and num_steps > 0, 'error: invalid number of steps'
 
         assert self.matrix_v is not None, 'error: matrix V is None, run Arnoldi algorithm first'
-        n = self.matrix_v.shape[0]
-        k = self.matrix_v.shape[1] - 1
-        Ik = np.eye(k, dtype=float)
-        ek = Ik[:, k - 1]
-        e1 = Ik[:, 0]
-        Hk = self.matrix_h[0: k, :]
-        step = T / num_steps
-        ht_list = []
 
-        def compute_ht(self, t):
+        def compute_vA(self):
+            'compute smallest eigenvalue of (A + A^T)/2'
+            a_trans = self.matrix_a.transpose()
+            new_a = (self.matrix_a + a_trans) / 2
+            sm_eig, _ = eigs(new_a, k=1, which='SR')
+            print "\nsm_eig = {}".format(sm_eig)
+            return sm_eig.real
+
+        def compute_gt(vA, t, T):
+            'compute g(t) = exp((t - T)vA) at specific t'
+            x = (t - T) * vA
+            return math.exp(x)
+
+        def compute_ht(Hk, ek, e1, t):
+            'compute |h(t)|, h(t) = ek^T * e^(-t * Hk) * e1'
             Hk_t = expm(Hk.dot(-t))
             Hk_t_e1 = np.dot(Hk_t, e1)
             ht = np.dot(np.transpose(ek), Hk_t_e1)
-            return ht
+            return abs(ht)
 
-        for i in xrange(0, num_steps + 1):
-            ht = compute_ht(self, step * i)
-            ht_list.append(ht)
+        # compute the left hand side of Theorem 3.1, the equation (3.6)
+        # We are using the Simpson's rule for each step [0, step]:
+        # https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-        return ht_list
+        def get_ht_list(self, T, num_steps):
+
+            k = self.matrix_v.shape[1] - 1
+            Ik = np.eye(k, dtype=float)
+            ek = Ik[:, k - 1]
+            e1 = Ik[:, 0]
+            Hk = self.matrix_h[0: k, :]
+
+            int_step = T / (2 * num_steps)
+            ht_list = []
+            for i in xrange(0, 2 * num_steps + 1):
+                t = int_step * i
+                ht_list.append(compute_ht(Hk, ek, e1, t))
+
+            return ht_list
+
+        def get_gt_list(self, T, num_steps):
+            int_step = T / (2 * num_steps)
+            vA = compute_vA(self)
+            gt_list = []
+            for i in xrange(0, 2 * num_steps + 1):
+                gt_list.append(compute_gt(vA, int_step * i, T))
+
+            return gt_list
+
+        def compute_error_bound(self, T, num_steps):
+            ht_list = get_ht_list(self, T, num_steps)
+            gt_list = get_gt_list(self, T, num_steps)
+
+            print "\nht_list = \n{}".format(ht_list)
+            print "\ngt_list = \n{}".format(gt_list)
+
+            zt = []
+            for i in xrange(0, 2 * num_steps + 1):
+                zt.append(ht_list[i] * gt_list[i])
+
+            # compute integral
+            int_res = 0
+            step = T / num_steps
+
+            for i in xrange(0, num_steps):
+                j = 2 * i
+                zt_total = zt[j] + 4 * zt[j + 1] + zt[j + 2]
+                int_res = int_res + (step / 6) * zt_total
+
+            return int_res
+
+        int_res = compute_error_bound(self, T, num_steps)
+
+        return int_res
 
 
 def test():
     'test Krylov subspace method'
 
     heateq = HeatOneDimension(0.1, 1.0, 1.0, 1.0)
-
-    matrix_a, _ = heateq.get_odes(10)
+    _, matrix_a, _, _ = index_1_daes().RLC_circuit(1.0, 1.0, 1.0)
+    # matrix_a, _ = heateq.get_odes(10)
     n = matrix_a.shape[0]
     vector_v = np.random.rand(n, 1)    # initial vector
-    maxiter = 4                    # number of iteration
+    maxiter = 2                    # number of iteration
     Kry = KrylovSubspaceCPU()
     V, H = Kry.run_Arnoldi(matrix_a.tocsr(), vector_v, maxiter)
 
@@ -96,8 +156,9 @@ def test():
     print "\nshape of V = {}".format(V.shape)
     print "\nshape of H = {}".format(H.shape)
 
-    ht_list = Kry.get_error(1.0, 10)
-    print "\nht list = {}".format(ht_list)
+    int_res = Kry.get_error(1.0, 10)
+    print "\nintegral result = {}".format(int_res)
+
 
 if __name__ == '__main__':
 

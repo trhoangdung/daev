@@ -17,7 +17,6 @@ from scipy.linalg import expm
 import numpy as np
 import math
 from daev.pdes import HeatOneDimension
-from daev.daes import index_1_daes
 
 
 class KrylovSubspaceCPU(object):
@@ -28,6 +27,7 @@ class KrylovSubspaceCPU(object):
         self.matrix_v = None
         self.vector_v = None
         self.matrix_h = None
+        self.maxiter = None
         self.error = None
 
     def run_Arnoldi(self, matrix_a, vector_v, maxiter):
@@ -40,10 +40,12 @@ class KrylovSubspaceCPU(object):
         assert vector_v.shape[0] == matrix_a.shape[0], 'error: inconsistency between vector v and matrix_a'
         assert isinstance(
             maxiter, int) and maxiter >= 2, 'error: invalid numer of iteration'
+
         self.matrix_a = matrix_a
         self.vector_v = vector_v
         self.matrix_v, self.matrix_h = arnoldi(
             matrix_a, vector_v, maxiter=maxiter)
+        self.maxiter = maxiter
 
         return self.matrix_v, self.matrix_h
 
@@ -132,19 +134,24 @@ class KrylovSubspaceCPU(object):
             return int_res
 
         int_res = compute_error_bound(self, T, num_steps)
+        H = self.matrix_h
+        maxiter = self.maxiter
+        error_bound = H[maxiter, maxiter - 1] * int_res
 
-        return int_res
+        return error_bound
 
 
 def test():
     'test Krylov subspace method'
 
     heateq = HeatOneDimension(0.1, 1.0, 1.0, 1.0)
-    _, matrix_a, _, _ = index_1_daes().RLC_circuit(1.0, 1.0, 1.0)
-    # matrix_a, _ = heateq.get_odes(10)
+
+    matrix_a, _ = heateq.get_odes(10)
     n = matrix_a.shape[0]
     vector_v = np.random.rand(n, 1)    # initial vector
-    maxiter = 2                    # number of iteration
+    vector_v = vector_v.dot(1 / np.linalg.norm(vector_v))    # normalize vector v, v = v / norm(v)
+
+    maxiter = 7                    # number of iteration
     Kry = KrylovSubspaceCPU()
     V, H = Kry.run_Arnoldi(matrix_a.tocsr(), vector_v, maxiter)
 
@@ -156,8 +163,8 @@ def test():
     print "\nshape of V = {}".format(V.shape)
     print "\nshape of H = {}".format(H.shape)
 
-    int_res = Kry.get_error(1.0, 10)
-    print "\nintegral result = {}".format(int_res)
+    error_bound = Kry.get_error(1.0, 10)
+    print "\nerror_bound = {}".format(error_bound)
 
 
 if __name__ == '__main__':

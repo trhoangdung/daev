@@ -222,3 +222,72 @@ def spaceex_printer(decoupled_sys, init_set, stoptime, step, file_name):
     cfg_file = print_spaceex_cfg_file_autonomous_ode(xmin, xmax, ymin, ymax, stoptime, step, cfg_file_name)
 
     return xml_file, cfg_file
+
+
+def flow_printer(A, C, xmin_vec, xmax_vec, stoptime, step, file_name):
+    'print Flow* model from autonomous ode and init set'
+
+    assert isinstance(
+        A, np.ndarray) and A.shape[0] == A.shape[1], 'error: A is not an ndarray or A is not a square matrix'
+    assert isinstance(C, np.ndarray), 'error: C is not an ndarray'
+    assert C.shape[1] == A.shape[0], 'error: inconsistent between A and C'
+    assert isinstance(file_name, str), 'error: file name should be a string'
+
+    n = A.shape[0]
+    flow_model = open(file_name, 'w')
+
+    flow_model.write('continuous reachability \n')
+    flow_model.write('{ \n')
+
+    # print state variables
+
+    flow_model.write(' state var \n')
+    var_str = ''
+    for i in xrange(0, n):
+        var_x = ' x{},'.format(i)
+        var_str = var_str + var_x
+
+    flow_model.write(var_str)
+    flow_model.write(' t \n')
+
+    # print setting
+
+    flow_model.write(' setting \n')
+    flow_model.write(' { \n')
+    flow_model.write('  fixed steps {} \n'.format(step))
+    flow_model.write('  time {} \n'.format(stoptime))
+    flow_model.write('  remainder estimation 1e-3 \n')
+    flow_model.write('  identity precondition \n')
+    flow_model.write('  gnuplot octagon t, x0 \n')
+    flow_model.write('  fixed order 30 \n')
+    flow_model.write('  cutoff 1e-15 \n')
+    flow_model.write('  precision 256 \n')
+    flow_model.write('  output {} \n'.format(file_name))
+    flow_model.write('  print on \n')
+    flow_model.write(' } \n')
+
+    # print lti ode
+
+    flow_model.write(' lti ode \n')
+    flow_model.write(' { \n')
+
+    for i in xrange(0, n):
+        C1 = A[i]
+        xi_dynamics = get_dynamics(C1)
+        flow_model.write('  x{}\' = {}\n'.format(i, xi_dynamics[0]))
+
+    flow_model.write('  t\' = 1 \n')
+    flow_model.write('  } \n')
+
+    # print initial set
+
+    flow_model.write(' init \n')
+    flow_model.write(' { \n')
+
+    for i in xrange(0, n):
+        flow_model.write('  x{} in [{}, {}] \n'.format(i, xmin_vec[i], xmax_vec[i]))
+    flow_model.write('  t in [0, 0] \n')
+    flow_model.write(' } \n')
+
+    # end model
+    flow_model.write('}')

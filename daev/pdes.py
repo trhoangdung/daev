@@ -364,3 +364,76 @@ class HeatThreeDimension(object):
                 matrix_a[i, i] = matrix_a[i, i] + a / (1 + self.heat_exchange_const * step_x)
 
         return self.diffusity_const * (matrix_a.tocsr()), self.diffusity_const * (matrix_b.tocsr())
+
+
+def heat3d_dia(samples, diffusity_const, heat_exchange_const):
+    'fast dia_matrix construction for heat3d dynamics'
+
+    samples_sq = samples**2
+    dims = samples**3
+    step = 1.0 / (samples + 1)
+
+    a = diffusity_const * 1.0 / step**2
+    d = -2.0 * (a + a + a)
+
+    data = np.zeros((7, dims))
+    offsets = np.array([-samples_sq, -samples, -1, 0, 1, samples, samples_sq], dtype=float)
+
+    # element with z = -1
+    data[0, :-samples_sq] = a
+
+    # element with y = -1
+    for s in xrange(samples):
+        start = s * samples_sq
+        end = (s + 1) * (samples_sq) - samples
+        data[1, start:end] = a
+
+    # element with x = -1
+    for s in xrange(samples_sq):
+        start = s * samples
+        end = (s + 1) * (samples) - 1
+        data[2, start:end] = a
+
+    #### diagonal element ####
+    data[3, :] = d     # (prefill)
+
+    # adjust when z = 0 or z = samples-1
+    data[3, :samples_sq] += a
+    data[3, -samples_sq:] += a
+
+    # adjust when y = 0 or y = samples-1
+    for z in xrange(samples):
+        z_offset = z * samples_sq
+
+        data[3, z_offset:z_offset + samples] += a
+        data[3, z_offset + samples_sq - samples:z_offset + samples_sq] += a
+
+    # adjust when x = 0 (and add diffusion term when x = samples-1)
+    for z in xrange(samples):
+        for y in xrange(samples):
+            offset = z * samples_sq + y * samples
+
+            data[3, offset] += a
+
+            data[3, offset + samples - 1] += a / (1 + heat_exchange_const * step)
+
+    #### end diagnal element ####
+    # element with x = +1
+    for s in xrange(samples_sq):
+        start = 1 + s * samples
+        end = (s + 1) * samples
+        data[4, start:end] = a
+
+    # element with y = +1
+    for s in xrange(samples):
+        start = s * samples_sq + samples
+        end = (s + 1) * (samples_sq)
+        data[5, start:end] = a
+
+    # element with z = +1
+    data[6, samples_sq:] = a
+
+    rv = sparse.dia_matrix((data, offsets), shape=(dims, dims))
+    assert np.may_share_memory(rv.data, data)     # make sure we didn't copy memory
+
+    return rv

@@ -153,11 +153,11 @@ def plot_vline_set(list_of_line_set_list, totime, num_steps):
     ax1.legend([r'$z_{1}(t)$', r'$M_{2}(t)$', r'$u_{1}(t) = M_{1}$', r'$u_2(t) = M_{4}$'], fontsize=20)
     ax1.set_ylim(-2.0, 2.0)
     ax1.set_xlim(0, totime)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$', fontsize=20)
-    plt.ylabel(r'$z_{1}, M_{2}, u_{1}, u_{2}$', fontsize=20)
-    fig1.suptitle('Individual Reachable set of $z_{1}$ and $M_{2}$', fontsize=25)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.xlabel('$t$', fontsize=12)
+    plt.ylabel(r'$z_{1}, M_{2}, u_{1}, u_{2}$', fontsize=12)
+    #fig1.suptitle('Individual Reachable set of $z_{1}$ and $M_{2}$', fontsize=25)
     fig1.savefig('individual_reachset_z1_M2_u1_u2.pdf')
     plt.show()
 
@@ -180,13 +180,13 @@ def plot_boxes(list_of_line_set_list):
     ax1 = pl1.plot_boxes(ax1, box_list, facecolor='b', edgecolor='b')
     ax1.set_ylim(-1.5, 1.5)
     ax1.set_xlim(-1.5, 1.5)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$M_2$', fontsize=20)
-    plt.ylabel(r'$z_1$', fontsize=20)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel('$M_2$', fontsize=16)
+    plt.ylabel(r'$z_1$', fontsize=16)
     blue_patch = mpatches.Patch(color='b', label='$(z_{1}, M_{2})$')
     plt.legend(handles=[blue_patch])
-    fig1.suptitle('Reachable set $(z_1, M_2)$', fontsize=25)
+    #fig1.suptitle('Reachable set $(z_1, M_2)$', fontsize=25)
     plt.show()
     fig1.savefig('reachset_z1_M2.pdf')
 
@@ -211,13 +211,13 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
     ax2.set_xlim(-1.0, 1.0)
     ax2.set_ylim(-1.0, 1.0)
     ax2.set_zlim(0, 10.5)
-    ax2.tick_params(axis='z', labelsize=20)
-    ax2.tick_params(axis='x', labelsize=20)
-    ax2.tick_params(axis='y', labelsize=20)
-    ax2.set_xlabel('\n' + '$z_1$', fontsize=20, linespacing=2)
-    ax2.set_ylabel('\n' + '$M_2$', fontsize=20, linespacing=3)
-    ax2.set_zlabel('\n' + r'$t$ (second)', fontsize=25, linespacing=0.5)
-    fig2.suptitle('Reachable Set $(z_1, M_2)$ vs. time $t$', fontsize=25)
+    ax2.tick_params(axis='z', labelsize=14)
+    ax2.tick_params(axis='x', labelsize=14)
+    ax2.tick_params(axis='y', labelsize=14)
+    ax2.set_xlabel('\n' + '$z_1$', fontsize=16, linespacing=2)
+    ax2.set_ylabel('\n' + '$M_2$', fontsize=16, linespacing=3)
+    ax2.set_zlabel('\n' + r'$t$ (second)', fontsize=16, linespacing=0.5)
+    #fig2.suptitle('Reachable Set $(z_1, M_2)$ vs. time $t$', fontsize=25)
     plt.tight_layout()
     fig2.savefig('reachset_vs_time.pdf')
     plt.show()
@@ -226,14 +226,14 @@ def plot_boxes_vs_time(list_of_line_set_list, totime, num_steps):
 def construct_unsafe_set(dae_auto):
     'construct unsafe set'
 
-    C = np.array([[0, 0, 1, 0, 0, 0]])    # M2 <= -0.9
-    d = np.array([[-0.9]])
+    C = np.array([[0, 0, 1, 0, 0, 0]])    # M2 <= 0.8
+    d = np.array([[-0.8]])
     print "\nunsafe_set 1:  matrix C = {}".format(C)
     print "\nunsafe_set 1:  vector d = {}".format(d)
     unsafe_set1 = LinearPredicate(C, d)
 
-    C = np.array([[0, 0, 0, 1, 0, 0]])    # M3 <= -1.0
-    d = np.array([[-1.0]])
+    C = np.array([[0, 0, 0, -1, 0, 0]])    # M3 >=1.2
+    d = np.array([[-1.2]])
     print "\nunsafe_set 2:  matrix C = {}".format(C)
     print "\nunsafe_set 2:  vector d = {}".format(d)
     unsafe_set2 = LinearPredicate(C, d)
@@ -275,7 +275,7 @@ def plot_unsafe_trace(veri_result):
             trace_i[j] = trace_i_j[i]
             unsafe_line_i[j] = veri_result.unsafe_set.d[i]
         ax1.plot(time_list, trace_i)
-        ax1.plot(time_list, unsafe_line_i, 'r')
+        ax1.plot(time_list, unsafe_line_i)
 
     # get input traces
     input_mat = np.array([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]])
@@ -288,14 +288,14 @@ def plot_unsafe_trace(veri_result):
 
         ax1.plot(time_list, input_i_trace)
 
-    ax1.legend(['Ouput $M_2(t)$', 'Unsafe boundary', 'Input $M_1(t)$', 'Input $M_4(t)$'], fontsize=20)
+    ax1.legend(['Ouput $M_2(t)$', 'Unsafe boundary', 'Input $M_1(t)$', 'Input $M_4(t)$'], fontsize=13)
     ax1.set_ylim(-1.5, 1.5)
     ax1.set_xlim(0, 10.0)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('$t$ (seconds)', fontsize=20)
-    plt.ylabel(r'$M_1(t), M_2(t), M_4(t)$', fontsize=25)
-    fig1.suptitle('Unsafe trace', fontsize=25)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel('$t$ (seconds)', fontsize=16)
+    plt.ylabel(r'$M_1(t), M_2(t), M_4(t)$', fontsize=16)
+    #fig1.suptitle('Unsafe trace', fontsize=25)
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
     plt.show()
